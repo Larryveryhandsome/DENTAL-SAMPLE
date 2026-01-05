@@ -1,1102 +1,530 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Phone, Calendar, ChevronRight, Award, Heart } from 'lucide-react';
+import { Phone, MapPin, Clock, Menu, X, ChevronDown, ArrowRight, Instagram, Facebook, Star, ShieldCheck, HeartHandshake } from 'lucide-react';
 
-const LuxuryDentalClinic = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [activeSection, setActiveSection] = useState('');
-  const observerRef = useRef(null);
+/**
+ * ---------------------------------------------------------------------
+ * 靜奢風牙醫診所網站 (Quiet Luxury Dental Clinic Website)
+ * ---------------------------------------------------------------------
+ * 設計理念：
+ * 1. 色彩：燕麥色 (#F9F8F6) 背景，深炭灰 (#2C2C2C) 文字，鼠尾草綠 (#7C9082) 點綴。
+ * 2. 排版：雜誌風格，大量留白 (Negative Space)，非對稱佈局 (Broken Grid)。
+ * 3. 體驗：平滑滾動，優雅的微互動。
+ */
+
+// --- 模擬資料 Data ---
+
+const DOCTORS = [
+  {
+    id: 1,
+    name: "林哲宇 院長",
+    title: "美學修復 / 植牙專科",
+    education: [
+      "臺北醫學大學 牙醫學士",
+      "美國紐約大學(NYU) 人工植牙專科研究員",
+      "中華民國口腔植體學會 專科醫師"
+    ],
+    philosophy: "牙科不僅是醫療，更是微釐米之間的藝術雕琢。",
+    imageAlt: "林院長正在專注檢視牙模的側寫特寫，自然光影"
+  },
+  {
+    id: 2,
+    name: "陳雅雯 醫師",
+    title: "齒顎矯正 / 隱適美認證",
+    education: [
+      "國立臺灣大學 臨床牙醫學碩士",
+      "隱適美 Invisalign 白金級認證醫師",
+      "台灣衛福部部定 齒顎矯正專科醫師"
+    ],
+    philosophy: "讓笑容成為您最自信的語言，從細節開始。",
+    imageAlt: "陳醫師與患者諮詢時的溫暖微笑互動照，背景模糊"
+  }
+];
+
+const SERVICES = [
+  {
+    title: "微創植牙",
+    subtitle: "Implantology",
+    desc: "採用數位導航技術，將誤差降至最低。透過 3D 電腦斷層掃描，重建穩固咬合與自然美觀。",
+    details: "適合缺牙久未處理、或是追求高穩定度的患者。費用區間視骨質條件而定。",
+    risk: "需經醫師評估骨質密度，術後需定期回診維護。",
+  },
+  {
+    title: "數位美學貼片",
+    subtitle: "Aesthetic Veneers",
+    desc: "一日美齒工藝。量身打造的超薄瓷牙貼片，改善齒色不均、牙縫過大或輕微排列不整。",
+    details: "適合追求完美微笑曲線者。療程時間短，效果持久。",
+    risk: "需避免啃咬硬物，夜間磨牙者需配戴咬合板。",
+  },
+  {
+    title: "隱形矯正",
+    subtitle: "Invisible Orthodontics",
+    desc: "透明、舒適、可拆卸。透過一系列透明牙套，在不知不覺中將牙齒引導至理想位置。",
+    details: "適合社交需求高、無法接受傳統鋼牙的成人與青少年。",
+    risk: "需極高的自律性配戴，每日需戴滿 20-22 小時。",
+  }
+];
+
+const FAQS = [
+  { q: "初診需要攜帶什麼？", a: "請攜帶健保卡與身分證。若有服用慢性病藥物，建議攜帶藥單以供醫師參考用藥安全。" },
+  { q: "植牙與假牙的差別是什麼？", a: "植牙是在骨頭內植入人工牙根，咬合力接近真牙且不需磨損鄰牙；傳統牙橋則需修磨前後牙齒。兩者適應症不同，需由醫師評估。" },
+  { q: "美白貼片會傷害牙齒嗎？", a: "現代數位貼片僅需極微量的修磨（約 0.3-0.5mm），在專業醫師操作下，對牙齒結構影響極小且安全。" }
+];
+
+// --- 元件 Components ---
+
+// 1. 文字淡入動畫 Hook
+const useScrollAnimation = () => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
-      setScrollProgress(progress);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-          }
-        });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
       },
-      { threshold: 0.1 }
+      { threshold: 0.15 }
     );
-
-    document.querySelectorAll('.reveal').forEach((el) => {
-      observerRef.current?.observe(el);
-    });
-
-    return () => observerRef.current?.disconnect();
+    if (ref.current) observer.observe(ref.current);
+    return () => {
+      if (ref.current) observer.unobserve(ref.current);
+    };
   }, []);
 
-  const services = [
-    {
-      number: '01',
-      title: '全口重建',
-      subtitle: 'Full Reconstruction',
-      description: '當牙齒不再只是工具,而是生活品質的延伸。我們以謹慎的工藝,為您重塑咀嚼的尊嚴與自信的笑容。',
-      details: '適合多顆缺牙或嚴重磨損者。療程依個人狀況約需 6-12 個月,過程中我們會密切追蹤您的適應狀況。'
-    },
-    {
-      number: '02',
-      title: '微創植牙',
-      subtitle: 'Minimally Invasive Implants',
-      description: '減少手術創傷,縮短恢復時間。採用國際頂級植體品牌,由經驗豐富的專科醫師親自執行每一個細節。',
-      details: '單顆植牙療程約 3-4 個月。我們重視植體與骨質的完美結合,而非追求速度。'
-    },
-    {
-      number: '03',
-      title: '齒顎美學',
-      subtitle: 'Dental Aesthetics',
-      description: '美,不是千篇一律的白。我們理解每個人的笑容都有其獨特的韻味,量身訂製最適合您的自然之美。',
-      details: '全瓷冠、陶瓷貼片等美學修復。療程 2-4 週,注重色澤與型態的和諧統一。'
-    },
-    {
-      number: '04',
-      title: '隱形矯正',
-      subtitle: 'Invisible Orthodontics',
-      description: '改變,可以是悄然無聲的。透過隱形矯正技術,在不影響日常生活的前提下,逐步調整至理想的咬合與排列。',
-      details: '療程 1.5-2.5 年,定期追蹤調整。我們在意的不只是整齊,更是咬合功能的長期健康。'
-    }
-  ];
+  return [ref, isVisible];
+};
 
-  const philosophy = [
-    {
-      icon: '🤲',
-      title: '工藝精神',
-      text: '每一個治療計畫都是量身訂製的作品,我們拒絕流水線式的標準化服務。'
-    },
-    {
-      icon: '🕰️',
-      title: '時間的尊重',
-      text: '充裕的診療時間,讓醫師能夠專注於您,而非趕著看下一位患者。'
-    },
-    {
-      icon: '🌿',
-      title: '空間的療癒',
-      text: '診所空間融入自然元素與藝術品,讓看牙成為一段平靜的時光。'
-    }
-  ];
-
+const FadeIn = ({ children, delay = 0, className = "" }) => {
+  const [ref, isVisible] = useScrollAnimation();
   return (
-    <div className="luxury-dental">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap');
-        
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        
-        :root {
-          --midnight: #1a2332;
-          --navy: #2d3e50;
-          --sage: #9ba5a0;
-          --warmgrey: #b8b5b0;
-          --oatmeal: #f5f3ee;
-          --cream: #fafafa;
-          --gold: #c9a961;
-          --darkgold: #a08749;
-        }
-        
-        body {
-          font-family: 'Noto Sans TC', -apple-system, sans-serif;
-          background: var(--cream);
-          color: var(--midnight);
-          overflow-x: hidden;
-          -webkit-font-smoothing: antialiased;
-          font-weight: 300;
-        }
-        
-        .serif {
-          font-family: 'Noto Serif TC', Georgia, serif;
-        }
-        
-        /* Smooth Animations */
-        .reveal {
-          opacity: 0;
-          transform: translateY(60px);
-          transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                      transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .reveal.in-view {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        
-        .reveal-slow {
-          transition-duration: 1.6s;
-        }
-        
-        /* Typography */
-        h1, h2, h3 {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-weight: 400;
-          letter-spacing: 0.02em;
-        }
-        
-        p {
-          line-height: 1.8;
-          letter-spacing: 0.03em;
-          font-weight: 300;
-        }
-        
-        /* Navigation */
-        .nav-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 1000;
-          background: var(--cream);
-          backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(26, 35, 50, 0.06);
-        }
-        
-        .nav-content {
-          max-width: 1600px;
-          margin: 0 auto;
-          padding: 2rem 4rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
-        .logo {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 1.1rem;
-          font-weight: 500;
-          letter-spacing: 0.15em;
-          color: var(--midnight);
-        }
-        
-        .logo-subtitle {
-          font-size: 0.65rem;
-          letter-spacing: 0.2em;
-          color: var(--sage);
-          margin-top: 0.25rem;
-          font-weight: 300;
-        }
-        
-        .menu-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--midnight);
-          padding: 0.5rem;
-          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .menu-btn:hover {
-          transform: rotate(90deg);
-        }
-        
-        .menu-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100vh;
-          background: var(--midnight);
-          z-index: 2000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .menu-overlay.active {
-          opacity: 1;
-          pointer-events: all;
-        }
-        
-        .menu-items {
-          text-align: center;
-        }
-        
-        .menu-item {
-          display: block;
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 2.5rem;
-          color: var(--oatmeal);
-          text-decoration: none;
-          margin: 1.5rem 0;
-          opacity: 0.7;
-          transition: opacity 0.4s ease, letter-spacing 0.4s ease;
-          letter-spacing: 0.05em;
-        }
-        
-        .menu-item:hover {
-          opacity: 1;
-          letter-spacing: 0.15em;
-        }
-        
-        .close-btn {
-          position: absolute;
-          top: 2rem;
-          right: 4rem;
-          background: none;
-          border: none;
-          color: var(--oatmeal);
-          cursor: pointer;
-          padding: 0.5rem;
-          transition: transform 0.4s ease;
-        }
-        
-        .close-btn:hover {
-          transform: rotate(90deg);
-        }
-        
-        /* Hero Section */
-        .hero {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          padding: 8rem 4rem 4rem;
-          position: relative;
-          background: var(--cream);
-        }
-        
-        .hero-content {
-          max-width: 1600px;
-          margin: 0 auto;
-          width: 100%;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 6rem;
-          align-items: center;
-        }
-        
-        .hero-text {
-          padding-right: 2rem;
-        }
-        
-        .hero-title {
-          font-size: clamp(2.5rem, 5vw, 4.5rem);
-          line-height: 1.2;
-          margin-bottom: 2rem;
-          color: var(--midnight);
-        }
-        
-        .hero-subtitle {
-          font-size: 1.1rem;
-          color: var(--sage);
-          margin-bottom: 3rem;
-          line-height: 1.8;
-          max-width: 500px;
-        }
-        
-        .hero-image {
-          position: relative;
-          height: 600px;
-          overflow: hidden;
-        }
-        
-        .hero-image-inner {
-          position: absolute;
-          top: -10%;
-          right: -10%;
-          width: 120%;
-          height: 120%;
-          background: linear-gradient(135deg, var(--navy) 0%, var(--midnight) 100%);
-          opacity: 0.9;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 8rem;
-        }
-        
-        .cta-button {
-          display: inline-flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1.2rem 2.5rem;
-          background: var(--midnight);
-          color: var(--oatmeal);
-          border: none;
-          font-family: 'Noto Sans TC', sans-serif;
-          font-size: 0.9rem;
-          letter-spacing: 0.1em;
-          cursor: pointer;
-          transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .cta-button::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: var(--gold);
-          transition: left 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          z-index: 0;
-        }
-        
-        .cta-button:hover::before {
-          left: 0;
-        }
-        
-        .cta-button span,
-        .cta-button svg {
-          position: relative;
-          z-index: 1;
-        }
-        
-        .cta-button:hover {
-          color: var(--midnight);
-        }
-        
-        /* Philosophy Section */
-        .philosophy-section {
-          padding: 10rem 4rem;
-          background: var(--midnight);
-          color: var(--oatmeal);
-        }
-        
-        .section-container {
-          max-width: 1600px;
-          margin: 0 auto;
-        }
-        
-        .section-header {
-          margin-bottom: 6rem;
-          max-width: 600px;
-        }
-        
-        .section-label {
-          font-size: 0.75rem;
-          letter-spacing: 0.2em;
-          color: var(--gold);
-          margin-bottom: 1rem;
-          text-transform: uppercase;
-        }
-        
-        .section-title {
-          font-size: clamp(2rem, 4vw, 3.5rem);
-          margin-bottom: 2rem;
-          line-height: 1.3;
-        }
-        
-        .section-description {
-          font-size: 1.05rem;
-          color: var(--warmgrey);
-          line-height: 1.8;
-        }
-        
-        .philosophy-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 4rem;
-        }
-        
-        .philosophy-item {
-          padding: 3rem 0;
-          border-top: 1px solid rgba(201, 169, 97, 0.2);
-        }
-        
-        .philosophy-icon {
-          font-size: 2.5rem;
-          margin-bottom: 1.5rem;
-          display: block;
-        }
-        
-        .philosophy-title {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 1.3rem;
-          margin-bottom: 1rem;
-          color: var(--gold);
-        }
-        
-        .philosophy-text {
-          color: var(--warmgrey);
-          font-size: 0.95rem;
-          line-height: 1.8;
-        }
-        
-        /* Services Section */
-        .services-section {
-          padding: 10rem 4rem;
-          background: var(--oatmeal);
-        }
-        
-        .service-item {
-          display: grid;
-          grid-template-columns: 1fr 1.2fr;
-          gap: 6rem;
-          margin-bottom: 10rem;
-          align-items: start;
-        }
-        
-        .service-item:nth-child(even) {
-          grid-template-columns: 1.2fr 1fr;
-        }
-        
-        .service-item:nth-child(even) .service-content {
-          order: 2;
-        }
-        
-        .service-item:nth-child(even) .service-visual {
-          order: 1;
-        }
-        
-        .service-number {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 5rem;
-          color: var(--gold);
-          opacity: 0.3;
-          margin-bottom: 1rem;
-          font-weight: 300;
-        }
-        
-        .service-title {
-          font-size: 2.5rem;
-          margin-bottom: 0.5rem;
-          line-height: 1.2;
-        }
-        
-        .service-subtitle {
-          font-size: 0.85rem;
-          color: var(--sage);
-          letter-spacing: 0.15em;
-          margin-bottom: 2rem;
-          text-transform: uppercase;
-        }
-        
-        .service-description {
-          font-size: 1.05rem;
-          margin-bottom: 2rem;
-          color: var(--navy);
-          line-height: 1.8;
-        }
-        
-        .service-details {
-          font-size: 0.9rem;
-          color: var(--sage);
-          line-height: 1.7;
-          padding-left: 1.5rem;
-          border-left: 2px solid var(--gold);
-        }
-        
-        .service-visual {
-          position: relative;
-          height: 500px;
-          background: linear-gradient(135deg, var(--navy) 0%, var(--sage) 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 6rem;
-          color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .service-visual::after {
-          content: '';
-          position: absolute;
-          top: 5%;
-          left: 5%;
-          right: 5%;
-          bottom: 5%;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        /* Team Section */
-        .team-section {
-          padding: 10rem 4rem;
-          background: var(--cream);
-        }
-        
-        .team-intro {
-          max-width: 800px;
-          margin: 0 auto 8rem;
-          text-align: center;
-        }
-        
-        .doctor-card {
-          display: grid;
-          grid-template-columns: 1fr 1.5fr;
-          gap: 4rem;
-          margin-bottom: 6rem;
-          background: white;
-          padding: 4rem;
-          position: relative;
-        }
-        
-        .doctor-image {
-          aspect-ratio: 3/4;
-          background: linear-gradient(135deg, var(--sage) 0%, var(--warmgrey) 100%);
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 6rem;
-        }
-        
-        .doctor-info {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding-left: 2rem;
-        }
-        
-        .doctor-name {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
-        }
-        
-        .doctor-title {
-          font-size: 0.9rem;
-          color: var(--gold);
-          margin-bottom: 2rem;
-          letter-spacing: 0.1em;
-        }
-        
-        .doctor-quote {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 1.1rem;
-          line-height: 1.8;
-          color: var(--navy);
-          margin-bottom: 2rem;
-          font-style: italic;
-          padding-left: 2rem;
-          border-left: 3px solid var(--gold);
-        }
-        
-        .doctor-credentials {
-          font-size: 0.9rem;
-          color: var(--sage);
-          line-height: 1.7;
-        }
-        
-        /* Contact Section */
-        .contact-section {
-          padding: 10rem 4rem;
-          background: var(--navy);
-          color: var(--oatmeal);
-        }
-        
-        .contact-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8rem;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-        
-        .contact-info {
-          display: flex;
-          flex-direction: column;
-          gap: 3rem;
-        }
-        
-        .contact-item {
-          padding-bottom: 2rem;
-          border-bottom: 1px solid rgba(201, 169, 97, 0.2);
-        }
-        
-        .contact-label {
-          font-size: 0.75rem;
-          letter-spacing: 0.2em;
-          color: var(--gold);
-          margin-bottom: 0.75rem;
-          text-transform: uppercase;
-        }
-        
-        .contact-value {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 1.3rem;
-          color: var(--oatmeal);
-        }
-        
-        .contact-value a {
-          color: var(--oatmeal);
-          text-decoration: none;
-          transition: color 0.4s ease;
-        }
-        
-        .contact-value a:hover {
-          color: var(--gold);
-        }
-        
-        .contact-form {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-        
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-        
-        .form-label {
-          font-size: 0.8rem;
-          letter-spacing: 0.1em;
-          color: var(--warmgrey);
-        }
-        
-        .form-input,
-        .form-textarea {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(201, 169, 97, 0.2);
-          padding: 1rem 1.5rem;
-          color: var(--oatmeal);
-          font-family: 'Noto Sans TC', sans-serif;
-          font-size: 0.95rem;
-          transition: border-color 0.4s ease;
-        }
-        
-        .form-input:focus,
-        .form-textarea:focus {
-          outline: none;
-          border-color: var(--gold);
-        }
-        
-        .form-textarea {
-          resize: vertical;
-          min-height: 150px;
-        }
-        
-        .form-submit {
-          align-self: flex-start;
-          padding: 1.2rem 3rem;
-          background: var(--gold);
-          color: var(--midnight);
-          border: none;
-          font-family: 'Noto Sans TC', sans-serif;
-          font-size: 0.9rem;
-          letter-spacing: 0.1em;
-          cursor: pointer;
-          transition: background 0.4s ease;
-        }
-        
-        .form-submit:hover {
-          background: var(--darkgold);
-        }
-        
-        /* Footer */
-        .footer {
-          padding: 4rem 4rem 2rem;
-          background: var(--midnight);
-          color: var(--warmgrey);
-          text-align: center;
-        }
-        
-        .footer-content {
-          max-width: 1600px;
-          margin: 0 auto;
-        }
-        
-        .footer-logo {
-          font-family: 'Noto Serif TC', Georgia, serif;
-          font-size: 1rem;
-          letter-spacing: 0.15em;
-          margin-bottom: 2rem;
-          color: var(--oatmeal);
-        }
-        
-        .footer-text {
-          font-size: 0.8rem;
-          line-height: 1.8;
-          margin-bottom: 1rem;
-        }
-        
-        .footer-legal {
-          font-size: 0.7rem;
-          color: var(--sage);
-          margin-top: 2rem;
-          padding-top: 2rem;
-          border-top: 1px solid rgba(201, 169, 97, 0.1);
-        }
-        
-        /* Floating Action Button */
-        .fab {
-          position: fixed;
-          bottom: 3rem;
-          right: 3rem;
-          width: 60px;
-          height: 60px;
-          background: var(--gold);
-          color: var(--midnight);
-          border: none;
-          border-radius: 50%;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                      box-shadow 0.4s ease;
-          z-index: 999;
-        }
-        
-        .fab:hover {
-          transform: scale(1.1);
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-        }
-        
-        /* Responsive */
-        @media (max-width: 1024px) {
-          .nav-content {
-            padding: 1.5rem 2rem;
-          }
-          
-          .hero-content {
-            grid-template-columns: 1fr;
-            gap: 3rem;
-          }
-          
-          .hero-image {
-            height: 400px;
-          }
-          
-          .philosophy-grid {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-          }
-          
-          .service-item,
-          .service-item:nth-child(even) {
-            grid-template-columns: 1fr;
-          }
-          
-          .service-item:nth-child(even) .service-content,
-          .service-item:nth-child(even) .service-visual {
-            order: initial;
-          }
-          
-          .contact-grid {
-            grid-template-columns: 1fr;
-            gap: 4rem;
-          }
-          
-          .doctor-card {
-            grid-template-columns: 1fr;
-            padding: 2rem;
-          }
-          
-          .close-btn {
-            right: 2rem;
-          }
-        }
-        
-        @media (max-width: 768px) {
-          .hero,
-          .philosophy-section,
-          .services-section,
-          .team-section,
-          .contact-section {
-            padding: 6rem 1.5rem;
-          }
-          
-          .section-title {
-            font-size: 2rem;
-          }
-          
-          .service-number {
-            font-size: 3rem;
-          }
-          
-          .service-title {
-            font-size: 1.8rem;
-          }
-          
-          .fab {
-            bottom: 1.5rem;
-            right: 1.5rem;
-            width: 50px;
-            height: 50px;
-          }
-        }
-      `}</style>
-
-      {/* Navigation */}
-      <nav className="nav-container">
-        <div className="nav-content">
-          <div className="logo">
-            <div>齒 間 藝 術</div>
-            <div className="logo-subtitle">DENTAL ATELIER</div>
-          </div>
-          <button className="menu-btn" onClick={() => setMenuOpen(true)}>
-            <Menu size={28} strokeWidth={1.5} />
-          </button>
-        </div>
-      </nav>
-
-      {/* Menu Overlay */}
-      <div className={`menu-overlay ${menuOpen ? 'active' : ''}`}>
-        <button className="close-btn" onClick={() => setMenuOpen(false)}>
-          <X size={32} strokeWidth={1.5} />
-        </button>
-        <div className="menu-items">
-          <a href="#philosophy" className="menu-item" onClick={() => setMenuOpen(false)}>
-            診所理念
-          </a>
-          <a href="#services" className="menu-item" onClick={() => setMenuOpen(false)}>
-            診療項目
-          </a>
-          <a href="#team" className="menu-item" onClick={() => setMenuOpen(false)}>
-            醫療團隊
-          </a>
-          <a href="#contact" className="menu-item" onClick={() => setMenuOpen(false)}>
-            預約諮詢
-          </a>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <div className="hero-text reveal">
-            <h1 className="hero-title serif">
-              在齒間
-              <br />
-              尋找生活的
-              <br />
-              從容與優雅
-            </h1>
-            <p className="hero-subtitle">
-              這裡不是傳統診所的延伸,而是一個讓您感到平靜與被尊重的空間。
-              我們相信,口腔健康不僅關乎功能,更是生活品質的基石。
-            </p>
-            <button className="cta-button">
-              <span>預約私人諮詢</span>
-              <ChevronRight size={20} strokeWidth={1.5} />
-            </button>
-          </div>
-          <div className="hero-image reveal reveal-slow">
-            <div className="hero-image-inner">
-              🦷
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Philosophy Section */}
-      <section id="philosophy" className="philosophy-section">
-        <div className="section-container">
-          <div className="section-header reveal">
-            <div className="section-label">Our Philosophy</div>
-            <h2 className="section-title serif">
-              醫療,是一門關於時間與信任的藝術
-            </h2>
-            <p className="section-description">
-              我們拒絕將患者視為流水線上的數字。每一次診療,都是一段需要被細細品味的旅程。
-              在這裡,您會感受到醫療應有的溫度、專注與尊重。
-            </p>
-          </div>
-          <div className="philosophy-grid">
-            {philosophy.map((item, index) => (
-              <div key={index} className="philosophy-item reveal" style={{transitionDelay: `${index * 0.2}s`}}>
-                <span className="philosophy-icon">{item.icon}</span>
-                <h3 className="philosophy-title">{item.title}</h3>
-                <p className="philosophy-text">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section id="services" className="services-section">
-        <div className="section-container">
-          <div className="section-header reveal">
-            <div className="section-label">Services</div>
-            <h2 className="section-title serif">
-              量身訂製的治療計畫
-            </h2>
-          </div>
-          {services.map((service, index) => (
-            <div key={index} className="service-item reveal" style={{transitionDelay: `${index * 0.15}s`}}>
-              <div className="service-content">
-                <div className="service-number">{service.number}</div>
-                <h3 className="service-title serif">{service.title}</h3>
-                <div className="service-subtitle">{service.subtitle}</div>
-                <p className="service-description">{service.description}</p>
-                <div className="service-details">{service.details}</div>
-              </div>
-              <div className="service-visual">
-                {service.number}
-              </div>
-            </div>
-          ))}
-          <div className="reveal" style={{marginTop: '6rem', maxWidth: '800px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center'}}>
-            <p style={{fontSize: '0.85rem', lineHeight: '1.8', color: 'var(--sage)'}}>
-              以上療程說明僅供參考。每位患者的口腔狀況皆不相同,實際治療方案需由醫師親自評估後決定。
-              我們重視溝通的過程,會在治療前詳細說明可能的風險、替代方案與預期效果。
-              本診所不對療效做任何保證,但承諾以最謹慎的態度守護您的健康。
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section id="team" className="team-section">
-        <div className="section-container">
-          <div className="team-intro reveal">
-            <div className="section-label">Our Team</div>
-            <h2 className="section-title serif">
-              經驗與溫度兼具的醫療團隊
-            </h2>
-            <p className="section-description" style={{color: 'var(--navy)'}}>
-              我們的醫師不只擁有專業證照與豐富經驗,更重視與患者之間的信任關係。
-              在這裡,您不會只是一個病歷號碼。
-            </p>
-          </div>
-
-          <div className="doctor-card reveal">
-            <div className="doctor-image">
-              👨‍⚕️
-            </div>
-            <div className="doctor-info">
-              <h3 className="doctor-name serif">陳品睿 醫師</h3>
-              <div className="doctor-title">院長 / 植牙暨全口重建專科</div>
-              <p className="doctor-quote">
-                「每一顆牙齒的重建,都不只是技術的堆疊,而是對患者生活品質的承諾。
-                我希望來到這裡的每個人,都能在療程結束後,重新找回咀嚼的自在與笑容的自信。」
-              </p>
-              <div className="doctor-credentials">
-                台大牙醫學系學士 / 中華民國植牙醫學會專科醫師 / 
-                國際口腔植體學會(ICOI)院士 / 國際植牙專科醫師學會(ICOI)認證醫師
-              </div>
-            </div>
-          </div>
-
-          <div className="doctor-card reveal">
-            <div className="doctor-image">
-              👩‍⚕️
-            </div>
-            <div className="doctor-info">
-              <h3 className="doctor-name serif">林雅婷 醫師</h3>
-              <div className="doctor-title">主治醫師 / 齒顎矯正專科</div>
-              <p className="doctor-quote">
-                「矯正不該只是追求整齊,更要在意咬合功能與臉型的和諧。
-                我相信,美是自然而然的,而非刻意雕琢的結果。」
-              </p>
-              <div className="doctor-credentials">
-                陽明交大牙醫學系學士 / 中華民國齒顎矯正學會專科醫師 / 
-                隱適美(Invisalign)白金級認證醫師 / 美國矯正學會(AAO)會員
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="contact-section">
-        <div className="section-container">
-          <div className="section-header reveal" style={{textAlign: 'center', maxWidth: 'none', marginBottom: '6rem'}}>
-            <div className="section-label">Contact</div>
-            <h2 className="section-title serif">
-              我們期待與您相遇
-            </h2>
-          </div>
-          <div className="contact-grid">
-            <div className="contact-info reveal">
-              <div className="contact-item">
-                <div className="contact-label">Address</div>
-                <div className="contact-value">
-                  宜蘭市中山路二段 123 號
-                  <br />
-                  <span style={{fontSize: '0.9rem', color: 'var(--warmgrey)'}}>
-                    (近黎明國小,備有專屬停車位)
-                  </span>
-                </div>
-              </div>
-              <div className="contact-item">
-                <div className="contact-label">Phone</div>
-                <div className="contact-value">
-                  <a href="tel:03-1234567">(03) 123-4567</a>
-                </div>
-              </div>
-              <div className="contact-item">
-                <div className="contact-label">Hours</div>
-                <div className="contact-value" style={{fontSize: '1rem', lineHeight: '1.8'}}>
-                  週一至週五 10:00 - 18:00
-                  <br />
-                  週六 10:00 - 14:00
-                  <br />
-                  週日及國定假日休診
-                </div>
-              </div>
-              <div className="contact-item">
-                <div className="contact-label">Notice</div>
-                <p style={{fontSize: '0.85rem', lineHeight: '1.7', color: 'var(--warmgrey)'}}>
-                  為確保診療品質,本診所採預約制。
-                  初診患者建議提前 3-5 個工作日預約,
-                  以便我們為您安排充裕的諮詢時間。
-                </p>
-              </div>
-            </div>
-
-            <form className="contact-form reveal">
-              <div className="form-group">
-                <label className="form-label">您的姓名</label>
-                <input type="text" className="form-input" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">聯絡電話</label>
-                <input type="tel" className="form-input" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">電子信箱</label>
-                <input type="email" className="form-input" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">預約項目</label>
-                <input type="text" className="form-input" placeholder="例：植牙諮詢、矯正評估" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">希望告訴我們的事</label>
-                <textarea className="form-textarea" placeholder="您的需求、疑慮或特殊狀況"></textarea>
-              </div>
-              <button type="submit" className="form-submit">
-                送出預約申請
-              </button>
-              <p style={{fontSize: '0.75rem', color: 'var(--sage)', lineHeight: '1.6', marginTop: '1rem'}}>
-                送出後,我們會在 24 小時內與您聯繫確認。
-                若有急迫需求,歡迎直接來電。
-              </p>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-logo">齒間藝術 / DENTAL ATELIER</div>
-          <p className="footer-text">
-            以工藝精神守護每一位患者的口腔健康
-          </p>
-          <div className="footer-legal">
-            © 2025 齒間藝術牙醫診所 Dental Atelier. All rights reserved.
-            <br />
-            本網站內容僅供參考,不作為診斷或治療之依據。實際診療需由專業醫師評估。
-          </div>
-        </div>
-      </footer>
-
-      {/* Floating Action Button */}
-      <button className="fab" aria-label="預約諮詢">
-        <Calendar size={24} strokeWidth={1.5} />
-      </button>
+    <div
+      ref={ref}
+      className={`transition-all duration-1000 ease-out transform ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
     </div>
   );
 };
 
-export default LuxuryDentalClinic;
+// 2. 導覽列 Navbar
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? "bg-[#F9F8F6]/95 backdrop-blur-md py-4 shadow-sm" : "bg-transparent py-6"}`}>
+      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+        {/* LOGO */}
+        <div className="flex items-center gap-2 z-50">
+          <div className="w-8 h-8 bg-[#7C9082] rounded-full flex items-center justify-center text-[#F9F8F6] font-serif italic text-xl">M</div>
+          <span className={`text-xl font-serif tracking-widest font-semibold ${scrolled || isOpen ? "text-[#2C2C2C]" : "text-[#2C2C2C] md:text-[#2C2C2C]"}`}>
+            MUSE DENTAL
+            <span className="block text-[10px] font-sans tracking-[0.2em] uppercase text-[#7C9082]">Aesthetic Clinic</span>
+          </span>
+        </div>
+
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-12">
+          {["關於我們", "診療項目", "醫師團隊", "衛教專欄"].map((item) => (
+            <a key={item} href="#" className="text-[#2C2C2C] hover:text-[#7C9082] text-sm tracking-widest transition-colors duration-300 font-medium">
+              {item}
+            </a>
+          ))}
+          <button className="border border-[#2C2C2C] text-[#2C2C2C] px-6 py-2 text-xs tracking-widest hover:bg-[#2C2C2C] hover:text-[#F9F8F6] transition-all duration-500">
+            預約諮詢
+          </button>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden z-50 text-[#2C2C2C]">
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`fixed inset-0 bg-[#F9F8F6] flex flex-col justify-center items-center gap-8 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${isOpen ? "translate-y-0" : "-translate-y-full"}`}>
+          {["關於我們", "診療項目", "醫師團隊", "衛教專欄", "聯絡資訊"].map((item, idx) => (
+            <a key={item} href="#" className="text-2xl font-serif text-[#2C2C2C]" style={{ transitionDelay: `${idx * 100}ms` }}>
+              {item}
+            </a>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// 3. Hero Section
+const Hero = () => {
+  return (
+    <section className="relative w-full h-screen flex flex-col justify-center overflow-hidden bg-[#F9F8F6]">
+      {/* 裝飾性背景色塊 (Broken Grid) */}
+      <div className="absolute top-0 right-0 w-2/3 h-full bg-[#EBE9E4] z-0 hidden md:block" />
+      
+      <div className="max-w-7xl w-full mx-auto px-6 relative z-10 grid grid-cols-1 md:grid-cols-12 gap-12 items-center h-full pt-20">
+        
+        {/* 左側文字 */}
+        <div className="md:col-span-5 flex flex-col justify-center order-2 md:order-1">
+          <FadeIn delay={200}>
+            <p className="text-[#7C9082] tracking-[0.3em] text-xs uppercase mb-6 flex items-center gap-3">
+              <span className="w-8 h-[1px] bg-[#7C9082]"></span>
+              Quiet Luxury Dentistry
+            </p>
+          </FadeIn>
+          <FadeIn delay={400}>
+            <h1 className="text-5xl md:text-7xl font-serif text-[#2C2C2C] leading-[1.15] mb-8">
+              重塑您的 <br />
+              <span className="italic text-[#7C9082]">自信</span> 笑容
+            </h1>
+          </FadeIn>
+          <FadeIn delay={600}>
+            <p className="text-[#595959] leading-loose text-justify mb-10 max-w-md">
+              牙科不僅是醫療，更是一場關於美學與精準的工藝之旅。
+              我們在靜謐的空間中，為您提供最細膩的口腔照護體驗。
+            </p>
+          </FadeIn>
+          <FadeIn delay={800}>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button className="bg-[#2C2C2C] text-[#F9F8F6] px-8 py-4 text-xs tracking-[0.15em] hover:bg-[#7C9082] transition-colors duration-500">
+                立即預約
+              </button>
+              <button className="border border-[#2C2C2C] text-[#2C2C2C] px-8 py-4 text-xs tracking-[0.15em] hover:bg-[#EBE9E4] transition-colors duration-500">
+                了解療程
+              </button>
+            </div>
+          </FadeIn>
+        </div>
+
+        {/* 右側圖片區 (Placeholder for High-End Photography) */}
+        <div className="md:col-span-7 h-[50vh] md:h-[70vh] relative order-1 md:order-2">
+           <FadeIn delay={500} className="w-full h-full">
+            {/* 圖片容器：這裡模擬高品質實拍圖 */}
+            <div className="w-full h-full bg-[#D6D2C4] relative overflow-hidden group">
+               {/* 模擬圖片內容 */}
+               <div className="absolute inset-0 flex items-center justify-center text-[#9A9483] bg-[#D6D2C4]">
+                 <div className="text-center p-8">
+                   <span className="block mb-2 opacity-50">[ Image Placeholder ]</span>
+                   <p className="font-serif italic text-2xl">Cinematic shot of clinic interior</p>
+                   <p className="text-sm mt-2 opacity-60">Warm natural light, soft textures, no generic smiles</p>
+                 </div>
+               </div>
+               {/* 裝飾性圖片說明 */}
+               <div className="absolute bottom-8 left-8 bg-[#F9F8F6]/90 backdrop-blur px-6 py-4 max-w-xs hidden md:block">
+                 <p className="font-serif text-[#2C2C2C] text-lg">Serenity Space</p>
+                 <p className="text-xs text-[#595959] mt-1">Design for anxiety reduction</p>
+               </div>
+            </div>
+           </FadeIn>
+        </div>
+      </div>
+
+      {/* 底部資訊欄 - 3秒原則 */}
+      <div className="absolute bottom-0 w-full bg-[#F9F8F6] border-t border-[#E5E5E5] py-4 hidden md:flex justify-around items-center z-20">
+         <div className="flex items-center gap-3 text-[#595959] text-sm">
+           <MapPin size={16} className="text-[#7C9082]" />
+           <span>台北市大安區信義路四段 123 號</span>
+         </div>
+         <div className="flex items-center gap-3 text-[#595959] text-sm">
+           <Phone size={16} className="text-[#7C9082]" />
+           <span>02-2345-6789</span>
+         </div>
+         <div className="flex items-center gap-3 text-[#595959] text-sm">
+           <Clock size={16} className="text-[#7C9082]" />
+           <span>週一至週六 09:30 - 20:30</span>
+         </div>
+      </div>
+    </section>
+  );
+};
+
+// 4. 關於我們 (Broken Grid)
+const AboutSection = () => {
+  return (
+    <section className="py-32 bg-[#F9F8F6] px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+          {/* 圖片稍微錯位 */}
+          <div className="relative mt-12 md:mt-0">
+             <FadeIn>
+               <div className="w-4/5 ml-auto aspect-[3/4] bg-[#CCC5B9] relative">
+                 <div className="absolute inset-0 flex items-center justify-center text-[#8C8579]">
+                    <span className="font-serif italic">[ Doctor's Portrait ]</span>
+                 </div>
+               </div>
+             </FadeIn>
+             <FadeIn delay={300} className="absolute -bottom-10 -left-6 md:-left-12 w-2/3 aspect-square bg-[#7C9082] p-8 flex flex-col justify-center text-[#F9F8F6]">
+               <ShieldCheck size={32} className="mb-4 opacity-80" />
+               <p className="font-serif text-2xl mb-2">專業認證</p>
+               <p className="text-sm opacity-80 leading-relaxed">全院醫師皆具備國內外專科訓練背景，定期參與國際學術研討。</p>
+             </FadeIn>
+          </div>
+
+          <div className="md:pl-12">
+            <FadeIn>
+              <h2 className="text-4xl font-serif text-[#2C2C2C] mb-8">
+                不只治癒牙齒，<br />更療癒人心
+              </h2>
+            </FadeIn>
+            <FadeIn delay={200}>
+              <p className="text-[#595959] leading-loose mb-6 text-justify">
+                走進 MUSE DENTAL，您不會聞到刺鼻的藥水味，也不會聽到尖銳的鑽牙聲。我們引進了瑞士頂級低噪音設備，並透過香氛與音樂，打造如飯店般的放鬆環境。
+              </p>
+              <p className="text-[#595959] leading-loose mb-10 text-justify">
+                我們深知看牙的焦慮。因此，我們堅持「慢醫療」，預留充足的看診時間，詳細解說每一個步驟，讓您在充分理解與安心的狀態下完成治療。
+              </p>
+            </FadeIn>
+            <FadeIn delay={400}>
+               <a href="#" className="inline-flex items-center gap-2 text-[#7C9082] tracking-widest text-xs uppercase hover:gap-4 transition-all duration-300">
+                 Meet Our Team <ArrowRight size={14} />
+               </a>
+            </FadeIn>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// 5. 服務項目 (Accordion style for clean layout)
+const ServiceCard = ({ service, index }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <FadeIn delay={index * 100}>
+      <div className="border-t border-[#D1D1D1] py-8 group cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+        <div className="flex justify-between items-center">
+          <div className="flex items-baseline gap-4 md:gap-8">
+            <span className="text-xs font-sans text-[#999] w-8">0{index + 1}</span>
+            <h3 className="text-2xl md:text-3xl font-serif text-[#2C2C2C] group-hover:text-[#7C9082] transition-colors duration-300">
+              {service.title}
+            </h3>
+            <span className="hidden md:inline-block text-xs uppercase tracking-widest text-[#999] ml-4">{service.subtitle}</span>
+          </div>
+          <div className={`transform transition-transform duration-500 ${isOpen ? "rotate-180" : "rotate-0"}`}>
+             <ChevronDown className="text-[#2C2C2C] opacity-50" />
+          </div>
+        </div>
+        
+        <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isOpen ? "max-h-[500px] opacity-100 mt-6" : "max-h-0 opacity-0"}`}>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pl-0 md:pl-16">
+            <div className="md:col-span-8">
+               <p className="text-[#595959] leading-loose mb-4">{service.desc}</p>
+               <div className="bg-[#EBE9E4]/50 p-6 rounded-sm">
+                 <p className="text-sm text-[#2C2C2C] mb-2 font-medium">適用對象與流程：</p>
+                 <p className="text-sm text-[#595959] leading-relaxed mb-4">{service.details}</p>
+                 <div className="flex items-start gap-2 mt-4 text-xs text-[#888]">
+                   <span className="mt-0.5 text-red-400">*</span>
+                   <span>{service.risk}</span>
+                 </div>
+               </div>
+            </div>
+            <div className="md:col-span-4 flex items-end justify-end">
+               <button className="text-xs border-b border-[#2C2C2C] pb-1 hover:text-[#7C9082] hover:border-[#7C9082] transition-colors">
+                 查看詳細案例
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </FadeIn>
+  );
+};
+
+const ServicesSection = () => {
+  return (
+    <section className="py-32 bg-[#F9F8F6] px-6">
+      <div className="max-w-5xl mx-auto">
+        <FadeIn>
+          <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <h2 className="text-4xl md:text-5xl font-serif text-[#2C2C2C]">
+              專科診療項目
+            </h2>
+            <p className="text-[#7C9082] text-sm max-w-xs leading-relaxed">
+              整合數位科技與美學觀點，為您提供全方位的口腔健康計畫。
+            </p>
+          </div>
+        </FadeIn>
+
+        <div className="flex flex-col">
+          {SERVICES.map((s, i) => (
+            <ServiceCard key={i} service={s} index={i} />
+          ))}
+          <div className="border-t border-[#D1D1D1]" />
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// 6. 醫師專欄 (Editorial Style)
+const DoctorSection = () => {
+  return (
+    <section className="py-32 bg-[#EBE9E4] px-6">
+      <div className="max-w-7xl mx-auto">
+         <FadeIn>
+            <h2 className="text-center text-xs tracking-[0.3em] uppercase text-[#7C9082] mb-4">Our Specialists</h2>
+            <h3 className="text-center text-4xl font-serif text-[#2C2C2C] mb-20">醫師團隊</h3>
+         </FadeIn>
+
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {DOCTORS.map((doc, idx) => (
+              <FadeIn key={doc.id} delay={idx * 200}>
+                <div className="group">
+                  {/* Photo Area */}
+                  <div className="w-full aspect-[4/5] bg-[#D6D2C4] relative mb-8 overflow-hidden">
+                     {/* 模擬醫師照片 */}
+                     <div className="absolute inset-0 flex flex-col items-center justify-center text-[#9A9483] bg-[#CCC5B9] group-hover:scale-105 transition-transform duration-1000 ease-out">
+                        <span className="font-serif italic text-lg opacity-70">[ Doctor Photo ]</span>
+                        <span className="text-xs px-8 text-center mt-2 opacity-60">{doc.imageAlt}</span>
+                     </div>
+                  </div>
+                  {/* Info Area */}
+                  <div className="pr-4">
+                    <h4 className="text-2xl font-serif text-[#2C2C2C] mb-1">{doc.name}</h4>
+                    <p className="text-xs text-[#7C9082] uppercase tracking-widest mb-6">{doc.title}</p>
+                    
+                    <ul className="space-y-2 mb-6">
+                      {doc.education.map((edu, i) => (
+                        <li key={i} className="text-sm text-[#595959] flex items-start gap-2">
+                           <span className="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                           {edu}
+                        </li>
+                      ))}
+                    </ul>
+                    <blockquote className="border-l-2 border-[#7C9082] pl-4 py-1">
+                      <p className="font-serif italic text-[#2C2C2C] text-lg leading-relaxed">
+                        "{doc.philosophy}"
+                      </p>
+                    </blockquote>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+         </div>
+      </div>
+    </section>
+  );
+};
+
+// 7. Footer & Floating CTA
+const Footer = () => {
+  return (
+    <footer className="bg-[#2C2C2C] text-[#D1D1D1] py-20 px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="col-span-1 md:col-span-2">
+          <div className="flex items-center gap-2 mb-6">
+             <div className="w-6 h-6 bg-[#7C9082] rounded-full flex items-center justify-center text-[#2C2C2C] font-serif italic text-sm">M</div>
+             <span className="text-xl font-serif text-[#F9F8F6]">MUSE DENTAL</span>
+          </div>
+          <p className="text-sm leading-loose max-w-sm opacity-80 mb-8">
+            致力於提供最優質的牙科體驗。所有的醫療行為皆有風險，實際治療成效因人而異，請務必親自前往診所諮詢專業醫師。
+          </p>
+          <div className="flex gap-4">
+            <Instagram className="cursor-pointer hover:text-[#7C9082] transition-colors" />
+            <Facebook className="cursor-pointer hover:text-[#7C9082] transition-colors" />
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-[#F9F8F6] font-serif mb-6">快速連結</h4>
+          <ul className="space-y-4 text-sm opacity-80">
+            <li className="hover:text-[#7C9082] cursor-pointer">關於我們</li>
+            <li className="hover:text-[#7C9082] cursor-pointer">服務項目</li>
+            <li className="hover:text-[#7C9082] cursor-pointer">最新消息</li>
+            <li className="hover:text-[#7C9082] cursor-pointer">常見問題</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-[#F9F8F6] font-serif mb-6">聯絡資訊</h4>
+          <ul className="space-y-4 text-sm opacity-80">
+            <li className="flex items-start gap-3">
+              <MapPin size={16} className="mt-1 flex-shrink-0" />
+              台北市大安區信義路四段 123 號
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone size={16} />
+              02-2345-6789
+            </li>
+            <li className="flex items-start gap-3">
+              <Clock size={16} className="mt-1 flex-shrink-0" />
+              週一至週五: 09:30 - 20:30 <br />
+              週六: 09:30 - 17:00 <br />
+              週日: 休診
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="border-t border-[#444] mt-16 pt-8 text-center text-xs opacity-50">
+        &copy; 2024 MUSE Dental Clinic. All Rights Reserved. 醫療機構代碼：XXXXXXXXXX
+      </div>
+    </footer>
+  );
+};
+
+const FloatingCTA = () => {
+  return (
+    <div className="fixed bottom-6 right-6 z-40 md:hidden flex flex-col gap-3">
+       <button className="bg-[#7C9082] text-white p-4 rounded-full shadow-lg hover:bg-[#6A7F72] transition-all">
+         <Phone size={20} />
+       </button>
+       <button className="bg-[#2C2C2C] text-[#F9F8F6] px-6 py-4 rounded-full shadow-lg font-medium tracking-widest text-xs flex items-center gap-2">
+         立即預約 <ArrowRight size={14} />
+       </button>
+    </div>
+  );
+};
+
+const StickyCTA_Desktop = () => {
+  return (
+      <div className="fixed bottom-10 right-10 z-40 hidden md:block">
+          <button className="bg-[#2C2C2C] text-[#F9F8F6] w-16 h-16 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300 group relative">
+             <span className="absolute -top-10 bg-white text-black text-xs px-3 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                 線上預約
+             </span>
+             <HeartHandshake size={24} />
+          </button>
+      </div>
+  )
+}
+
+// --- Main App ---
+
+export default function App() {
+  return (
+    <div className="bg-[#F9F8F6] min-h-screen font-sans antialiased text-[#2C2C2C] selection:bg-[#7C9082] selection:text-white">
+      <Navbar />
+      <Hero />
+      <AboutSection />
+      <ServicesSection />
+      <DoctorSection />
+      {/* 衛教與FAQ區塊簡化展示 */}
+      <section className="py-24 bg-[#F9F8F6] px-6 border-t border-[#E5E5E5]">
+         <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-serif mb-12">常見疑問</h2>
+            <div className="space-y-6 text-left">
+               {FAQS.map((f, i) => (
+                  <div key={i} className="bg-white p-6 shadow-sm border border-[#EBE9E4]">
+                     <p className="font-medium text-[#2C2C2C] mb-2">Q: {f.q}</p>
+                     <p className="text-[#595959] text-sm">{f.a}</p>
+                  </div>
+               ))}
+            </div>
+         </div>
+      </section>
+      <Footer />
+      <FloatingCTA />
+      <StickyCTA_Desktop />
+    </div>
+  );
+}
