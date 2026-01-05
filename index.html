@@ -1,530 +1,638 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Phone, MapPin, Clock, Menu, X, ChevronDown, ArrowRight, Instagram, Facebook, Star, ShieldCheck, HeartHandshake } from 'lucide-react';
-
-/**
- * ---------------------------------------------------------------------
- * 靜奢風牙醫診所網站 (Quiet Luxury Dental Clinic Website)
- * ---------------------------------------------------------------------
- * 設計理念：
- * 1. 色彩：燕麥色 (#F9F8F6) 背景，深炭灰 (#2C2C2C) 文字，鼠尾草綠 (#7C9082) 點綴。
- * 2. 排版：雜誌風格，大量留白 (Negative Space)，非對稱佈局 (Broken Grid)。
- * 3. 體驗：平滑滾動，優雅的微互動。
- */
-
-// --- 模擬資料 Data ---
-
-const DOCTORS = [
-  {
-    id: 1,
-    name: "林哲宇 院長",
-    title: "美學修復 / 植牙專科",
-    education: [
-      "臺北醫學大學 牙醫學士",
-      "美國紐約大學(NYU) 人工植牙專科研究員",
-      "中華民國口腔植體學會 專科醫師"
-    ],
-    philosophy: "牙科不僅是醫療，更是微釐米之間的藝術雕琢。",
-    imageAlt: "林院長正在專注檢視牙模的側寫特寫，自然光影"
-  },
-  {
-    id: 2,
-    name: "陳雅雯 醫師",
-    title: "齒顎矯正 / 隱適美認證",
-    education: [
-      "國立臺灣大學 臨床牙醫學碩士",
-      "隱適美 Invisalign 白金級認證醫師",
-      "台灣衛福部部定 齒顎矯正專科醫師"
-    ],
-    philosophy: "讓笑容成為您最自信的語言，從細節開始。",
-    imageAlt: "陳醫師與患者諮詢時的溫暖微笑互動照，背景模糊"
-  }
-];
-
-const SERVICES = [
-  {
-    title: "微創植牙",
-    subtitle: "Implantology",
-    desc: "採用數位導航技術，將誤差降至最低。透過 3D 電腦斷層掃描，重建穩固咬合與自然美觀。",
-    details: "適合缺牙久未處理、或是追求高穩定度的患者。費用區間視骨質條件而定。",
-    risk: "需經醫師評估骨質密度，術後需定期回診維護。",
-  },
-  {
-    title: "數位美學貼片",
-    subtitle: "Aesthetic Veneers",
-    desc: "一日美齒工藝。量身打造的超薄瓷牙貼片，改善齒色不均、牙縫過大或輕微排列不整。",
-    details: "適合追求完美微笑曲線者。療程時間短，效果持久。",
-    risk: "需避免啃咬硬物，夜間磨牙者需配戴咬合板。",
-  },
-  {
-    title: "隱形矯正",
-    subtitle: "Invisible Orthodontics",
-    desc: "透明、舒適、可拆卸。透過一系列透明牙套，在不知不覺中將牙齒引導至理想位置。",
-    details: "適合社交需求高、無法接受傳統鋼牙的成人與青少年。",
-    risk: "需極高的自律性配戴，每日需戴滿 20-22 小時。",
-  }
-];
-
-const FAQS = [
-  { q: "初診需要攜帶什麼？", a: "請攜帶健保卡與身分證。若有服用慢性病藥物，建議攜帶藥單以供醫師參考用藥安全。" },
-  { q: "植牙與假牙的差別是什麼？", a: "植牙是在骨頭內植入人工牙根，咬合力接近真牙且不需磨損鄰牙；傳統牙橋則需修磨前後牙齒。兩者適應症不同，需由醫師評估。" },
-  { q: "美白貼片會傷害牙齒嗎？", a: "現代數位貼片僅需極微量的修磨（約 0.3-0.5mm），在專業醫師操作下，對牙齒結構影響極小且安全。" }
-];
-
-// --- 元件 Components ---
-
-// 1. 文字淡入動畫 Hook
-const useScrollAnimation = () => {
-  const ref = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUSE DENTAL | 靜奢美學牙醫</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        serif: ['"Noto Serif TC"', 'serif'],
+                    },
+                    colors: {
+                        oatmeal: '#F9F8F6',
+                        charcoal: '#2C2C2C',
+                        sage: '#7C9082',
+                        stone: '#EBE9E4',
+                        warmgray: '#595959'
+                    }
+                }
+            }
         }
-      },
-      { threshold: 0.15 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
-  }, []);
+    </script>
 
-  return [ref, isVisible];
-};
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-const FadeIn = ({ children, delay = 0, className = "" }) => {
-  const [ref, isVisible] = useScrollAnimation();
-  return (
-    <div
-      ref={ref}
-      className={`transition-all duration-1000 ease-out transform ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-      } ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-};
+    <style>
+        /* Custom Utilities */
+        body {
+            background-color: #F9F8F6;
+            color: #2C2C2C;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Animation Classes */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(3rem); /* translate-y-12 */
+            transition: all 1s ease-out;
+        }
+        
+        .reveal-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Mobile Menu Transition */
+        .mobile-menu {
+            transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
 
-// 2. 導覽列 Navbar
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+        /* Accordion Transition */
+        .accordion-content {
+            transition: max-height 0.7s ease-in-out, opacity 0.7s ease-in-out, margin-top 0.7s ease-in-out;
+        }
+    </style>
+</head>
+<body class="selection:bg-sage selection:text-white">
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-500 py-6 bg-transparent">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <!-- LOGO -->
+            <div class="flex items-center gap-2 z-50 cursor-pointer">
+                <div class="w-8 h-8 bg-sage rounded-full flex items-center justify-center text-oatmeal font-serif italic text-xl">M</div>
+                <span class="text-xl font-serif tracking-widest font-semibold text-charcoal">
+                    MUSE DENTAL
+                    <span class="block text-[10px] font-sans tracking-[0.2em] uppercase text-sage font-normal">Aesthetic Clinic</span>
+                </span>
+            </div>
 
-  return (
-    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? "bg-[#F9F8F6]/95 backdrop-blur-md py-4 shadow-sm" : "bg-transparent py-6"}`}>
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        {/* LOGO */}
-        <div className="flex items-center gap-2 z-50">
-          <div className="w-8 h-8 bg-[#7C9082] rounded-full flex items-center justify-center text-[#F9F8F6] font-serif italic text-xl">M</div>
-          <span className={`text-xl font-serif tracking-widest font-semibold ${scrolled || isOpen ? "text-[#2C2C2C]" : "text-[#2C2C2C] md:text-[#2C2C2C]"}`}>
-            MUSE DENTAL
-            <span className="block text-[10px] font-sans tracking-[0.2em] uppercase text-[#7C9082]">Aesthetic Clinic</span>
-          </span>
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-12">
+                <a href="#about" class="text-charcoal hover:text-sage text-sm tracking-widest transition-colors duration-300 font-medium">關於我們</a>
+                <a href="#services" class="text-charcoal hover:text-sage text-sm tracking-widest transition-colors duration-300 font-medium">診療項目</a>
+                <a href="#doctors" class="text-charcoal hover:text-sage text-sm tracking-widest transition-colors duration-300 font-medium">醫師團隊</a>
+                <a href="#faq" class="text-charcoal hover:text-sage text-sm tracking-widest transition-colors duration-300 font-medium">常見疑問</a>
+                <button class="border border-charcoal text-charcoal px-6 py-2 text-xs tracking-widest hover:bg-charcoal hover:text-oatmeal transition-all duration-500">
+                    預約諮詢
+                </button>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="menu-btn" class="md:hidden z-50 text-charcoal">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
         </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-12">
-          {["關於我們", "診療項目", "醫師團隊", "衛教專欄"].map((item) => (
-            <a key={item} href="#" className="text-[#2C2C2C] hover:text-[#7C9082] text-sm tracking-widest transition-colors duration-300 font-medium">
-              {item}
-            </a>
-          ))}
-          <button className="border border-[#2C2C2C] text-[#2C2C2C] px-6 py-2 text-xs tracking-widest hover:bg-[#2C2C2C] hover:text-[#F9F8F6] transition-all duration-500">
-            預約諮詢
-          </button>
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu-overlay" class="fixed inset-0 bg-oatmeal flex flex-col justify-center items-center gap-8 mobile-menu -translate-y-full z-40">
+            <a href="#about" class="mobile-link text-2xl font-serif text-charcoal opacity-0 transition-opacity duration-500 delay-100">關於我們</a>
+            <a href="#services" class="mobile-link text-2xl font-serif text-charcoal opacity-0 transition-opacity duration-500 delay-200">診療項目</a>
+            <a href="#doctors" class="mobile-link text-2xl font-serif text-charcoal opacity-0 transition-opacity duration-500 delay-300">醫師團隊</a>
+            <a href="#faq" class="mobile-link text-2xl font-serif text-charcoal opacity-0 transition-opacity duration-500 delay-400">常見疑問</a>
+            <a href="#" class="mobile-link text-2xl font-serif text-charcoal opacity-0 transition-opacity duration-500 delay-500">聯絡資訊</a>
         </div>
-
-        {/* Mobile Menu Button */}
-        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden z-50 text-[#2C2C2C]">
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Mobile Menu Overlay */}
-        <div className={`fixed inset-0 bg-[#F9F8F6] flex flex-col justify-center items-center gap-8 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${isOpen ? "translate-y-0" : "-translate-y-full"}`}>
-          {["關於我們", "診療項目", "醫師團隊", "衛教專欄", "聯絡資訊"].map((item, idx) => (
-            <a key={item} href="#" className="text-2xl font-serif text-[#2C2C2C]" style={{ transitionDelay: `${idx * 100}ms` }}>
-              {item}
-            </a>
-          ))}
-        </div>
-      </div>
     </nav>
-  );
-};
 
-// 3. Hero Section
-const Hero = () => {
-  return (
-    <section className="relative w-full h-screen flex flex-col justify-center overflow-hidden bg-[#F9F8F6]">
-      {/* 裝飾性背景色塊 (Broken Grid) */}
-      <div className="absolute top-0 right-0 w-2/3 h-full bg-[#EBE9E4] z-0 hidden md:block" />
-      
-      <div className="max-w-7xl w-full mx-auto px-6 relative z-10 grid grid-cols-1 md:grid-cols-12 gap-12 items-center h-full pt-20">
+    <!-- Hero Section -->
+    <section class="relative w-full h-screen flex flex-col justify-center overflow-hidden bg-oatmeal">
+        <!-- Background Block -->
+        <div class="absolute top-0 right-0 w-2/3 h-full bg-stone z-0 hidden md:block"></div>
         
-        {/* 左側文字 */}
-        <div className="md:col-span-5 flex flex-col justify-center order-2 md:order-1">
-          <FadeIn delay={200}>
-            <p className="text-[#7C9082] tracking-[0.3em] text-xs uppercase mb-6 flex items-center gap-3">
-              <span className="w-8 h-[1px] bg-[#7C9082]"></span>
-              Quiet Luxury Dentistry
-            </p>
-          </FadeIn>
-          <FadeIn delay={400}>
-            <h1 className="text-5xl md:text-7xl font-serif text-[#2C2C2C] leading-[1.15] mb-8">
-              重塑您的 <br />
-              <span className="italic text-[#7C9082]">自信</span> 笑容
-            </h1>
-          </FadeIn>
-          <FadeIn delay={600}>
-            <p className="text-[#595959] leading-loose text-justify mb-10 max-w-md">
-              牙科不僅是醫療，更是一場關於美學與精準的工藝之旅。
-              我們在靜謐的空間中，為您提供最細膩的口腔照護體驗。
-            </p>
-          </FadeIn>
-          <FadeIn delay={800}>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-[#2C2C2C] text-[#F9F8F6] px-8 py-4 text-xs tracking-[0.15em] hover:bg-[#7C9082] transition-colors duration-500">
-                立即預約
-              </button>
-              <button className="border border-[#2C2C2C] text-[#2C2C2C] px-8 py-4 text-xs tracking-[0.15em] hover:bg-[#EBE9E4] transition-colors duration-500">
-                了解療程
-              </button>
-            </div>
-          </FadeIn>
-        </div>
-
-        {/* 右側圖片區 (Placeholder for High-End Photography) */}
-        <div className="md:col-span-7 h-[50vh] md:h-[70vh] relative order-1 md:order-2">
-           <FadeIn delay={500} className="w-full h-full">
-            {/* 圖片容器：這裡模擬高品質實拍圖 */}
-            <div className="w-full h-full bg-[#D6D2C4] relative overflow-hidden group">
-               {/* 模擬圖片內容 */}
-               <div className="absolute inset-0 flex items-center justify-center text-[#9A9483] bg-[#D6D2C4]">
-                 <div className="text-center p-8">
-                   <span className="block mb-2 opacity-50">[ Image Placeholder ]</span>
-                   <p className="font-serif italic text-2xl">Cinematic shot of clinic interior</p>
-                   <p className="text-sm mt-2 opacity-60">Warm natural light, soft textures, no generic smiles</p>
-                 </div>
-               </div>
-               {/* 裝飾性圖片說明 */}
-               <div className="absolute bottom-8 left-8 bg-[#F9F8F6]/90 backdrop-blur px-6 py-4 max-w-xs hidden md:block">
-                 <p className="font-serif text-[#2C2C2C] text-lg">Serenity Space</p>
-                 <p className="text-xs text-[#595959] mt-1">Design for anxiety reduction</p>
-               </div>
-            </div>
-           </FadeIn>
-        </div>
-      </div>
-
-      {/* 底部資訊欄 - 3秒原則 */}
-      <div className="absolute bottom-0 w-full bg-[#F9F8F6] border-t border-[#E5E5E5] py-4 hidden md:flex justify-around items-center z-20">
-         <div className="flex items-center gap-3 text-[#595959] text-sm">
-           <MapPin size={16} className="text-[#7C9082]" />
-           <span>台北市大安區信義路四段 123 號</span>
-         </div>
-         <div className="flex items-center gap-3 text-[#595959] text-sm">
-           <Phone size={16} className="text-[#7C9082]" />
-           <span>02-2345-6789</span>
-         </div>
-         <div className="flex items-center gap-3 text-[#595959] text-sm">
-           <Clock size={16} className="text-[#7C9082]" />
-           <span>週一至週六 09:30 - 20:30</span>
-         </div>
-      </div>
-    </section>
-  );
-};
-
-// 4. 關於我們 (Broken Grid)
-const AboutSection = () => {
-  return (
-    <section className="py-32 bg-[#F9F8F6] px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-          {/* 圖片稍微錯位 */}
-          <div className="relative mt-12 md:mt-0">
-             <FadeIn>
-               <div className="w-4/5 ml-auto aspect-[3/4] bg-[#CCC5B9] relative">
-                 <div className="absolute inset-0 flex items-center justify-center text-[#8C8579]">
-                    <span className="font-serif italic">[ Doctor's Portrait ]</span>
-                 </div>
-               </div>
-             </FadeIn>
-             <FadeIn delay={300} className="absolute -bottom-10 -left-6 md:-left-12 w-2/3 aspect-square bg-[#7C9082] p-8 flex flex-col justify-center text-[#F9F8F6]">
-               <ShieldCheck size={32} className="mb-4 opacity-80" />
-               <p className="font-serif text-2xl mb-2">專業認證</p>
-               <p className="text-sm opacity-80 leading-relaxed">全院醫師皆具備國內外專科訓練背景，定期參與國際學術研討。</p>
-             </FadeIn>
-          </div>
-
-          <div className="md:pl-12">
-            <FadeIn>
-              <h2 className="text-4xl font-serif text-[#2C2C2C] mb-8">
-                不只治癒牙齒，<br />更療癒人心
-              </h2>
-            </FadeIn>
-            <FadeIn delay={200}>
-              <p className="text-[#595959] leading-loose mb-6 text-justify">
-                走進 MUSE DENTAL，您不會聞到刺鼻的藥水味，也不會聽到尖銳的鑽牙聲。我們引進了瑞士頂級低噪音設備，並透過香氛與音樂，打造如飯店般的放鬆環境。
-              </p>
-              <p className="text-[#595959] leading-loose mb-10 text-justify">
-                我們深知看牙的焦慮。因此，我們堅持「慢醫療」，預留充足的看診時間，詳細解說每一個步驟，讓您在充分理解與安心的狀態下完成治療。
-              </p>
-            </FadeIn>
-            <FadeIn delay={400}>
-               <a href="#" className="inline-flex items-center gap-2 text-[#7C9082] tracking-widest text-xs uppercase hover:gap-4 transition-all duration-300">
-                 Meet Our Team <ArrowRight size={14} />
-               </a>
-            </FadeIn>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// 5. 服務項目 (Accordion style for clean layout)
-const ServiceCard = ({ service, index }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <FadeIn delay={index * 100}>
-      <div className="border-t border-[#D1D1D1] py-8 group cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-        <div className="flex justify-between items-center">
-          <div className="flex items-baseline gap-4 md:gap-8">
-            <span className="text-xs font-sans text-[#999] w-8">0{index + 1}</span>
-            <h3 className="text-2xl md:text-3xl font-serif text-[#2C2C2C] group-hover:text-[#7C9082] transition-colors duration-300">
-              {service.title}
-            </h3>
-            <span className="hidden md:inline-block text-xs uppercase tracking-widest text-[#999] ml-4">{service.subtitle}</span>
-          </div>
-          <div className={`transform transition-transform duration-500 ${isOpen ? "rotate-180" : "rotate-0"}`}>
-             <ChevronDown className="text-[#2C2C2C] opacity-50" />
-          </div>
-        </div>
-        
-        <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isOpen ? "max-h-[500px] opacity-100 mt-6" : "max-h-0 opacity-0"}`}>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pl-0 md:pl-16">
-            <div className="md:col-span-8">
-               <p className="text-[#595959] leading-loose mb-4">{service.desc}</p>
-               <div className="bg-[#EBE9E4]/50 p-6 rounded-sm">
-                 <p className="text-sm text-[#2C2C2C] mb-2 font-medium">適用對象與流程：</p>
-                 <p className="text-sm text-[#595959] leading-relaxed mb-4">{service.details}</p>
-                 <div className="flex items-start gap-2 mt-4 text-xs text-[#888]">
-                   <span className="mt-0.5 text-red-400">*</span>
-                   <span>{service.risk}</span>
-                 </div>
-               </div>
-            </div>
-            <div className="md:col-span-4 flex items-end justify-end">
-               <button className="text-xs border-b border-[#2C2C2C] pb-1 hover:text-[#7C9082] hover:border-[#7C9082] transition-colors">
-                 查看詳細案例
-               </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </FadeIn>
-  );
-};
-
-const ServicesSection = () => {
-  return (
-    <section className="py-32 bg-[#F9F8F6] px-6">
-      <div className="max-w-5xl mx-auto">
-        <FadeIn>
-          <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <h2 className="text-4xl md:text-5xl font-serif text-[#2C2C2C]">
-              專科診療項目
-            </h2>
-            <p className="text-[#7C9082] text-sm max-w-xs leading-relaxed">
-              整合數位科技與美學觀點，為您提供全方位的口腔健康計畫。
-            </p>
-          </div>
-        </FadeIn>
-
-        <div className="flex flex-col">
-          {SERVICES.map((s, i) => (
-            <ServiceCard key={i} service={s} index={i} />
-          ))}
-          <div className="border-t border-[#D1D1D1]" />
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// 6. 醫師專欄 (Editorial Style)
-const DoctorSection = () => {
-  return (
-    <section className="py-32 bg-[#EBE9E4] px-6">
-      <div className="max-w-7xl mx-auto">
-         <FadeIn>
-            <h2 className="text-center text-xs tracking-[0.3em] uppercase text-[#7C9082] mb-4">Our Specialists</h2>
-            <h3 className="text-center text-4xl font-serif text-[#2C2C2C] mb-20">醫師團隊</h3>
-         </FadeIn>
-
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {DOCTORS.map((doc, idx) => (
-              <FadeIn key={doc.id} delay={idx * 200}>
-                <div className="group">
-                  {/* Photo Area */}
-                  <div className="w-full aspect-[4/5] bg-[#D6D2C4] relative mb-8 overflow-hidden">
-                     {/* 模擬醫師照片 */}
-                     <div className="absolute inset-0 flex flex-col items-center justify-center text-[#9A9483] bg-[#CCC5B9] group-hover:scale-105 transition-transform duration-1000 ease-out">
-                        <span className="font-serif italic text-lg opacity-70">[ Doctor Photo ]</span>
-                        <span className="text-xs px-8 text-center mt-2 opacity-60">{doc.imageAlt}</span>
-                     </div>
-                  </div>
-                  {/* Info Area */}
-                  <div className="pr-4">
-                    <h4 className="text-2xl font-serif text-[#2C2C2C] mb-1">{doc.name}</h4>
-                    <p className="text-xs text-[#7C9082] uppercase tracking-widest mb-6">{doc.title}</p>
-                    
-                    <ul className="space-y-2 mb-6">
-                      {doc.education.map((edu, i) => (
-                        <li key={i} className="text-sm text-[#595959] flex items-start gap-2">
-                           <span className="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
-                           {edu}
-                        </li>
-                      ))}
-                    </ul>
-                    <blockquote className="border-l-2 border-[#7C9082] pl-4 py-1">
-                      <p className="font-serif italic text-[#2C2C2C] text-lg leading-relaxed">
-                        "{doc.philosophy}"
-                      </p>
-                    </blockquote>
-                  </div>
+        <div class="max-w-7xl w-full mx-auto px-6 relative z-10 grid grid-cols-1 md:grid-cols-12 gap-12 items-center h-full pt-20">
+            
+            <!-- Left Text -->
+            <div class="md:col-span-5 flex flex-col justify-center order-2 md:order-1">
+                <div class="reveal-on-scroll" style="transition-delay: 200ms;">
+                    <p class="text-sage tracking-[0.3em] text-xs uppercase mb-6 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-sage"></span>
+                        Quiet Luxury Dentistry
+                    </p>
                 </div>
-              </FadeIn>
-            ))}
-         </div>
-      </div>
-    </section>
-  );
-};
-
-// 7. Footer & Floating CTA
-const Footer = () => {
-  return (
-    <footer className="bg-[#2C2C2C] text-[#D1D1D1] py-20 px-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-        <div className="col-span-1 md:col-span-2">
-          <div className="flex items-center gap-2 mb-6">
-             <div className="w-6 h-6 bg-[#7C9082] rounded-full flex items-center justify-center text-[#2C2C2C] font-serif italic text-sm">M</div>
-             <span className="text-xl font-serif text-[#F9F8F6]">MUSE DENTAL</span>
-          </div>
-          <p className="text-sm leading-loose max-w-sm opacity-80 mb-8">
-            致力於提供最優質的牙科體驗。所有的醫療行為皆有風險，實際治療成效因人而異，請務必親自前往診所諮詢專業醫師。
-          </p>
-          <div className="flex gap-4">
-            <Instagram className="cursor-pointer hover:text-[#7C9082] transition-colors" />
-            <Facebook className="cursor-pointer hover:text-[#7C9082] transition-colors" />
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-[#F9F8F6] font-serif mb-6">快速連結</h4>
-          <ul className="space-y-4 text-sm opacity-80">
-            <li className="hover:text-[#7C9082] cursor-pointer">關於我們</li>
-            <li className="hover:text-[#7C9082] cursor-pointer">服務項目</li>
-            <li className="hover:text-[#7C9082] cursor-pointer">最新消息</li>
-            <li className="hover:text-[#7C9082] cursor-pointer">常見問題</li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-[#F9F8F6] font-serif mb-6">聯絡資訊</h4>
-          <ul className="space-y-4 text-sm opacity-80">
-            <li className="flex items-start gap-3">
-              <MapPin size={16} className="mt-1 flex-shrink-0" />
-              台北市大安區信義路四段 123 號
-            </li>
-            <li className="flex items-center gap-3">
-              <Phone size={16} />
-              02-2345-6789
-            </li>
-            <li className="flex items-start gap-3">
-              <Clock size={16} className="mt-1 flex-shrink-0" />
-              週一至週五: 09:30 - 20:30 <br />
-              週六: 09:30 - 17:00 <br />
-              週日: 休診
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div className="border-t border-[#444] mt-16 pt-8 text-center text-xs opacity-50">
-        &copy; 2024 MUSE Dental Clinic. All Rights Reserved. 醫療機構代碼：XXXXXXXXXX
-      </div>
-    </footer>
-  );
-};
-
-const FloatingCTA = () => {
-  return (
-    <div className="fixed bottom-6 right-6 z-40 md:hidden flex flex-col gap-3">
-       <button className="bg-[#7C9082] text-white p-4 rounded-full shadow-lg hover:bg-[#6A7F72] transition-all">
-         <Phone size={20} />
-       </button>
-       <button className="bg-[#2C2C2C] text-[#F9F8F6] px-6 py-4 rounded-full shadow-lg font-medium tracking-widest text-xs flex items-center gap-2">
-         立即預約 <ArrowRight size={14} />
-       </button>
-    </div>
-  );
-};
-
-const StickyCTA_Desktop = () => {
-  return (
-      <div className="fixed bottom-10 right-10 z-40 hidden md:block">
-          <button className="bg-[#2C2C2C] text-[#F9F8F6] w-16 h-16 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300 group relative">
-             <span className="absolute -top-10 bg-white text-black text-xs px-3 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                 線上預約
-             </span>
-             <HeartHandshake size={24} />
-          </button>
-      </div>
-  )
-}
-
-// --- Main App ---
-
-export default function App() {
-  return (
-    <div className="bg-[#F9F8F6] min-h-screen font-sans antialiased text-[#2C2C2C] selection:bg-[#7C9082] selection:text-white">
-      <Navbar />
-      <Hero />
-      <AboutSection />
-      <ServicesSection />
-      <DoctorSection />
-      {/* 衛教與FAQ區塊簡化展示 */}
-      <section className="py-24 bg-[#F9F8F6] px-6 border-t border-[#E5E5E5]">
-         <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-serif mb-12">常見疑問</h2>
-            <div className="space-y-6 text-left">
-               {FAQS.map((f, i) => (
-                  <div key={i} className="bg-white p-6 shadow-sm border border-[#EBE9E4]">
-                     <p className="font-medium text-[#2C2C2C] mb-2">Q: {f.q}</p>
-                     <p className="text-[#595959] text-sm">{f.a}</p>
-                  </div>
-               ))}
+                <div class="reveal-on-scroll" style="transition-delay: 400ms;">
+                    <h1 class="text-5xl md:text-7xl font-serif text-charcoal leading-[1.15] mb-8">
+                        重塑您的 <br />
+                        <span class="italic text-sage">自信</span> 笑容
+                    </h1>
+                </div>
+                <div class="reveal-on-scroll" style="transition-delay: 600ms;">
+                    <p class="text-warmgray leading-loose text-justify mb-10 max-w-md">
+                        牙科不僅是醫療，更是一場關於美學與精準的工藝之旅。
+                        我們在靜謐的空間中，為您提供最細膩的口腔照護體驗。
+                    </p>
+                </div>
+                <div class="reveal-on-scroll" style="transition-delay: 800ms;">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="bg-charcoal text-oatmeal px-8 py-4 text-xs tracking-[0.15em] hover:bg-sage transition-colors duration-500">
+                            立即預約
+                        </button>
+                        <button class="border border-charcoal text-charcoal px-8 py-4 text-xs tracking-[0.15em] hover:bg-stone transition-colors duration-500">
+                            了解療程
+                        </button>
+                    </div>
+                </div>
             </div>
-         </div>
-      </section>
-      <Footer />
-      <FloatingCTA />
-      <StickyCTA_Desktop />
+
+            <!-- Right Image Area -->
+            <div class="md:col-span-7 h-[50vh] md:h-[70vh] relative order-1 md:order-2">
+                <div class="reveal-on-scroll w-full h-full" style="transition-delay: 500ms;">
+                    <div class="w-full h-full bg-[#D6D2C4] relative overflow-hidden group">
+                        <!-- Placeholder Content -->
+                        <div class="absolute inset-0 flex items-center justify-center text-[#9A9483] bg-[#D6D2C4]">
+                            <div class="text-center p-8">
+                                <span class="block mb-2 opacity-50">[ Image Placeholder ]</span>
+                                <p class="font-serif italic text-2xl">Cinematic shot of clinic interior</p>
+                                <p class="text-sm mt-2 opacity-60">Warm natural light, soft textures, no generic smiles</p>
+                            </div>
+                        </div>
+                        <!-- Decorative Box -->
+                        <div class="absolute bottom-8 left-8 bg-oatmeal/90 backdrop-blur px-6 py-4 max-w-xs hidden md:block">
+                            <p class="font-serif text-charcoal text-lg">Serenity Space</p>
+                            <p class="text-xs text-warmgray mt-1">Design for anxiety reduction</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Info Bar -->
+        <div class="absolute bottom-0 w-full bg-oatmeal border-t border-[#E5E5E5] py-4 hidden md:flex justify-around items-center z-20">
+            <div class="flex items-center gap-3 text-warmgray text-sm">
+                <i data-lucide="map-pin" class="text-sage w-4 h-4"></i>
+                <span>台北市大安區信義路四段 123 號</span>
+            </div>
+            <div class="flex items-center gap-3 text-warmgray text-sm">
+                <i data-lucide="phone" class="text-sage w-4 h-4"></i>
+                <span>02-2345-6789</span>
+            </div>
+            <div class="flex items-center gap-3 text-warmgray text-sm">
+                <i data-lucide="clock" class="text-sage w-4 h-4"></i>
+                <span>週一至週六 09:30 - 20:30</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-32 bg-oatmeal px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <!-- Image Grid -->
+                <div class="relative mt-12 md:mt-0">
+                    <div class="reveal-on-scroll">
+                        <div class="w-4/5 ml-auto aspect-[3/4] bg-[#CCC5B9] relative">
+                            <div class="absolute inset-0 flex items-center justify-center text-[#8C8579]">
+                                <span class="font-serif italic">[ Doctor's Portrait ]</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="reveal-on-scroll absolute -bottom-10 -left-6 md:-left-12 w-2/3 aspect-square bg-sage p-8 flex flex-col justify-center text-oatmeal" style="transition-delay: 300ms;">
+                        <i data-lucide="shield-check" class="w-8 h-8 mb-4 opacity-80"></i>
+                        <p class="font-serif text-2xl mb-2">專業認證</p>
+                        <p class="text-sm opacity-80 leading-relaxed">全院醫師皆具備國內外專科訓練背景，定期參與國際學術研討。</p>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="md:pl-12">
+                    <div class="reveal-on-scroll">
+                        <h2 class="text-4xl font-serif text-charcoal mb-8">
+                            不只治癒牙齒，<br />更療癒人心
+                        </h2>
+                    </div>
+                    <div class="reveal-on-scroll" style="transition-delay: 200ms;">
+                        <p class="text-warmgray leading-loose mb-6 text-justify">
+                            走進 MUSE DENTAL，您不會聞到刺鼻的藥水味，也不會聽到尖銳的鑽牙聲。我們引進了瑞士頂級低噪音設備，並透過香氛與音樂，打造如飯店般的放鬆環境。
+                        </p>
+                        <p class="text-warmgray leading-loose mb-10 text-justify">
+                            我們深知看牙的焦慮。因此，我們堅持「慢醫療」，預留充足的看診時間，詳細解說每一個步驟，讓您在充分理解與安心的狀態下完成治療。
+                        </p>
+                    </div>
+                    <div class="reveal-on-scroll" style="transition-delay: 400ms;">
+                        <a href="#doctors" class="inline-flex items-center gap-2 text-sage tracking-widest text-xs uppercase hover:gap-4 transition-all duration-300">
+                            Meet Our Team <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-32 bg-oatmeal px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="reveal-on-scroll">
+                <div class="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <h2 class="text-4xl md:text-5xl font-serif text-charcoal">
+                        專科診療項目
+                    </h2>
+                    <p class="text-sage text-sm max-w-xs leading-relaxed">
+                        整合數位科技與美學觀點，為您提供全方位的口腔健康計畫。
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col border-b border-[#D1D1D1]">
+                <!-- Service 1 -->
+                <div class="reveal-on-scroll service-item border-t border-[#D1D1D1]" style="transition-delay: 0ms;">
+                    <div class="py-8 group cursor-pointer service-header">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-baseline gap-4 md:gap-8">
+                                <span class="text-xs font-sans text-[#999] w-8">01</span>
+                                <h3 class="text-2xl md:text-3xl font-serif text-charcoal group-hover:text-sage transition-colors duration-300">微創植牙</h3>
+                                <span class="hidden md:inline-block text-xs uppercase tracking-widest text-[#999] ml-4">Implantology</span>
+                            </div>
+                            <div class="transform transition-transform duration-500 icon-chevron">
+                                <i data-lucide="chevron-down" class="text-charcoal opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content max-h-0 opacity-0 overflow-hidden mt-0">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pl-0 md:pl-16 pt-6">
+                                <div class="md:col-span-8">
+                                    <p class="text-warmgray leading-loose mb-4">採用數位導航技術，將誤差降至最低。透過 3D 電腦斷層掃描，重建穩固咬合與自然美觀。</p>
+                                    <div class="bg-stone/50 p-6 rounded-sm">
+                                        <p class="text-sm text-charcoal mb-2 font-medium">適用對象與流程：</p>
+                                        <p class="text-sm text-warmgray leading-relaxed mb-4">適合缺牙久未處理、或是追求高穩定度的患者。費用區間視骨質條件而定。</p>
+                                        <div class="flex items-start gap-2 mt-4 text-xs text-[#888]">
+                                            <span class="mt-0.5 text-red-400">*</span>
+                                            <span>需經醫師評估骨質密度，術後需定期回診維護。</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-4 flex items-end justify-end">
+                                    <button class="text-xs border-b border-charcoal pb-1 hover:text-sage hover:border-sage transition-colors">查看詳細案例</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="reveal-on-scroll service-item border-t border-[#D1D1D1]" style="transition-delay: 100ms;">
+                    <div class="py-8 group cursor-pointer service-header">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-baseline gap-4 md:gap-8">
+                                <span class="text-xs font-sans text-[#999] w-8">02</span>
+                                <h3 class="text-2xl md:text-3xl font-serif text-charcoal group-hover:text-sage transition-colors duration-300">數位美學貼片</h3>
+                                <span class="hidden md:inline-block text-xs uppercase tracking-widest text-[#999] ml-4">Aesthetic Veneers</span>
+                            </div>
+                            <div class="transform transition-transform duration-500 icon-chevron">
+                                <i data-lucide="chevron-down" class="text-charcoal opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content max-h-0 opacity-0 overflow-hidden mt-0">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pl-0 md:pl-16 pt-6">
+                                <div class="md:col-span-8">
+                                    <p class="text-warmgray leading-loose mb-4">一日美齒工藝。量身打造的超薄瓷牙貼片，改善齒色不均、牙縫過大或輕微排列不整。</p>
+                                    <div class="bg-stone/50 p-6 rounded-sm">
+                                        <p class="text-sm text-charcoal mb-2 font-medium">適用對象與流程：</p>
+                                        <p class="text-sm text-warmgray leading-relaxed mb-4">適合追求完美微笑曲線者。療程時間短，效果持久。</p>
+                                        <div class="flex items-start gap-2 mt-4 text-xs text-[#888]">
+                                            <span class="mt-0.5 text-red-400">*</span>
+                                            <span>需避免啃咬硬物，夜間磨牙者需配戴咬合板。</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-4 flex items-end justify-end">
+                                    <button class="text-xs border-b border-charcoal pb-1 hover:text-sage hover:border-sage transition-colors">查看詳細案例</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="reveal-on-scroll service-item border-t border-[#D1D1D1]" style="transition-delay: 200ms;">
+                    <div class="py-8 group cursor-pointer service-header">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-baseline gap-4 md:gap-8">
+                                <span class="text-xs font-sans text-[#999] w-8">03</span>
+                                <h3 class="text-2xl md:text-3xl font-serif text-charcoal group-hover:text-sage transition-colors duration-300">隱形矯正</h3>
+                                <span class="hidden md:inline-block text-xs uppercase tracking-widest text-[#999] ml-4">Invisible Orthodontics</span>
+                            </div>
+                            <div class="transform transition-transform duration-500 icon-chevron">
+                                <i data-lucide="chevron-down" class="text-charcoal opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content max-h-0 opacity-0 overflow-hidden mt-0">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pl-0 md:pl-16 pt-6">
+                                <div class="md:col-span-8">
+                                    <p class="text-warmgray leading-loose mb-4">透明、舒適、可拆卸。透過一系列透明牙套，在不知不覺中將牙齒引導至理想位置。</p>
+                                    <div class="bg-stone/50 p-6 rounded-sm">
+                                        <p class="text-sm text-charcoal mb-2 font-medium">適用對象與流程：</p>
+                                        <p class="text-sm text-warmgray leading-relaxed mb-4">適合社交需求高、無法接受傳統鋼牙的成人與青少年。</p>
+                                        <div class="flex items-start gap-2 mt-4 text-xs text-[#888]">
+                                            <span class="mt-0.5 text-red-400">*</span>
+                                            <span>需極高的自律性配戴，每日需戴滿 20-22 小時。</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-4 flex items-end justify-end">
+                                    <button class="text-xs border-b border-charcoal pb-1 hover:text-sage hover:border-sage transition-colors">查看詳細案例</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctor Section -->
+    <section id="doctors" class="py-32 bg-stone px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="reveal-on-scroll">
+                <h2 class="text-center text-xs tracking-[0.3em] uppercase text-sage mb-4">Our Specialists</h2>
+                <h3 class="text-center text-4xl font-serif text-charcoal mb-20">醫師團隊</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <!-- Doctor 1 -->
+                <div class="reveal-on-scroll" style="transition-delay: 0ms;">
+                    <div class="group">
+                        <div class="w-full aspect-[4/5] bg-[#D6D2C4] relative mb-8 overflow-hidden">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-[#9A9483] bg-[#CCC5B9] group-hover:scale-105 transition-transform duration-1000 ease-out">
+                                <span class="font-serif italic text-lg opacity-70">[ Doctor Photo ]</span>
+                                <span class="text-xs px-8 text-center mt-2 opacity-60">林院長正在專注檢視牙模的側寫特寫，自然光影</span>
+                            </div>
+                        </div>
+                        <div class="pr-4">
+                            <h4 class="text-2xl font-serif text-charcoal mb-1">林哲宇 院長</h4>
+                            <p class="text-xs text-sage uppercase tracking-widest mb-6">美學修復 / 植牙專科</p>
+                            <ul class="space-y-2 mb-6">
+                                <li class="text-sm text-warmgray flex items-start gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                                    臺北醫學大學 牙醫學士
+                                </li>
+                                <li class="text-sm text-warmgray flex items-start gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                                    美國紐約大學(NYU) 人工植牙專科研究員
+                                </li>
+                                <li class="text-sm text-warmgray flex items-start gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                                    中華民國口腔植體學會 專科醫師
+                                </li>
+                            </ul>
+                            <blockquote class="border-l-2 border-sage pl-4 py-1">
+                                <p class="font-serif italic text-charcoal text-lg leading-relaxed">"牙科不僅是醫療，更是微釐米之間的藝術雕琢。"</p>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doctor 2 -->
+                <div class="reveal-on-scroll" style="transition-delay: 200ms;">
+                    <div class="group">
+                        <div class="w-full aspect-[4/5] bg-[#D6D2C4] relative mb-8 overflow-hidden">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-[#9A9483] bg-[#CCC5B9] group-hover:scale-105 transition-transform duration-1000 ease-out">
+                                <span class="font-serif italic text-lg opacity-70">[ Doctor Photo ]</span>
+                                <span class="text-xs px-8 text-center mt-2 opacity-60">陳醫師與患者諮詢時的溫暖微笑互動照，背景模糊</span>
+                            </div>
+                        </div>
+                        <div class="pr-4">
+                            <h4 class="text-2xl font-serif text-charcoal mb-1">陳雅雯 醫師</h4>
+                            <p class="text-xs text-sage uppercase tracking-widest mb-6">齒顎矯正 / 隱適美認證</p>
+                            <ul class="space-y-2 mb-6">
+                                <li class="text-sm text-warmgray flex items-start gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                                    國立臺灣大學 臨床牙醫學碩士
+                                </li>
+                                <li class="text-sm text-warmgray flex items-start gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                                    隱適美 Invisalign 白金級認證醫師
+                                </li>
+                                <li class="text-sm text-warmgray flex items-start gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-[#D1D1D1] mt-2"></span>
+                                    台灣衛福部部定 齒顎矯正專科醫師
+                                </li>
+                            </ul>
+                            <blockquote class="border-l-2 border-sage pl-4 py-1">
+                                <p class="font-serif italic text-charcoal text-lg leading-relaxed">"讓笑容成為您最自信的語言，從細節開始。"</p>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 bg-oatmeal px-6 border-t border-[#E5E5E5]">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-serif mb-12">常見疑問</h2>
+            <div class="space-y-6 text-left">
+                <div class="bg-white p-6 shadow-sm border border-stone">
+                    <p class="font-medium text-charcoal mb-2">Q: 初診需要攜帶什麼？</p>
+                    <p class="text-warmgray text-sm">請攜帶健保卡與身分證。若有服用慢性病藥物，建議攜帶藥單以供醫師參考用藥安全。</p>
+                </div>
+                <div class="bg-white p-6 shadow-sm border border-stone">
+                    <p class="font-medium text-charcoal mb-2">Q: 植牙與假牙的差別是什麼？</p>
+                    <p class="text-warmgray text-sm">植牙是在骨頭內植入人工牙根，咬合力接近真牙且不需磨損鄰牙；傳統牙橋則需修磨前後牙齒。兩者適應症不同，需由醫師評估。</p>
+                </div>
+                <div class="bg-white p-6 shadow-sm border border-stone">
+                    <p class="font-medium text-charcoal mb-2">Q: 美白貼片會傷害牙齒嗎？</p>
+                    <p class="text-warmgray text-sm">現代數位貼片僅需極微量的修磨（約 0.3-0.5mm），在專業醫師操作下，對牙齒結構影響極小且安全。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-charcoal text-[#D1D1D1] py-20 px-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div class="col-span-1 md:col-span-2">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-6 h-6 bg-sage rounded-full flex items-center justify-center text-charcoal font-serif italic text-sm">M</div>
+                    <span class="text-xl font-serif text-oatmeal">MUSE DENTAL</span>
+                </div>
+                <p class="text-sm leading-loose max-w-sm opacity-80 mb-8">
+                    致力於提供最優質的牙科體驗。所有的醫療行為皆有風險，實際治療成效因人而異，請務必親自前往診所諮詢專業醫師。
+                </p>
+                <div class="flex gap-4">
+                    <i data-lucide="instagram" class="cursor-pointer hover:text-sage transition-colors"></i>
+                    <i data-lucide="facebook" class="cursor-pointer hover:text-sage transition-colors"></i>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-oatmeal font-serif mb-6">快速連結</h4>
+                <ul class="space-y-4 text-sm opacity-80">
+                    <li class="hover:text-sage cursor-pointer">關於我們</li>
+                    <li class="hover:text-sage cursor-pointer">服務項目</li>
+                    <li class="hover:text-sage cursor-pointer">最新消息</li>
+                    <li class="hover:text-sage cursor-pointer">常見問題</li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-oatmeal font-serif mb-6">聯絡資訊</h4>
+                <ul class="space-y-4 text-sm opacity-80">
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i>
+                        台北市大安區信義路四段 123 號
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i data-lucide="phone" class="w-4 h-4"></i>
+                        02-2345-6789
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i>
+                        <span>
+                            週一至週五: 09:30 - 20:30 <br />
+                            週六: 09:30 - 17:00 <br />
+                            週日: 休診
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-[#444] mt-16 pt-8 text-center text-xs opacity-50">
+            &copy; 2024 MUSE Dental Clinic. All Rights Reserved. 醫療機構代碼：XXXXXXXXXX
+        </div>
+    </footer>
+
+    <!-- Floating CTA (Mobile) -->
+    <div class="fixed bottom-6 right-6 z-40 md:hidden flex flex-col gap-3">
+        <button class="bg-sage text-white p-4 rounded-full shadow-lg hover:bg-[#6A7F72] transition-all">
+            <i data-lucide="phone" class="w-5 h-5"></i>
+        </button>
+        <button class="bg-charcoal text-oatmeal px-6 py-4 rounded-full shadow-lg font-medium tracking-widest text-xs flex items-center gap-2">
+            立即預約 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
     </div>
-  );
-}
+
+    <!-- Sticky CTA (Desktop) -->
+    <div class="fixed bottom-10 right-10 z-40 hidden md:block">
+        <button class="bg-charcoal text-oatmeal w-16 h-16 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300 group relative">
+            <span class="absolute -top-10 bg-white text-black text-xs px-3 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                線上預約
+            </span>
+            <i data-lucide="heart-handshake" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // 1. Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        const logoText = navbar.querySelector('span.text-xl');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-oatmeal/95', 'backdrop-blur-md', 'shadow-sm', 'py-4');
+                navbar.classList.remove('py-6', 'bg-transparent');
+            } else {
+                navbar.classList.remove('bg-oatmeal/95', 'backdrop-blur-md', 'shadow-sm', 'py-4');
+                navbar.classList.add('py-6', 'bg-transparent');
+            }
+        });
+
+        // 2. Mobile Menu Toggle
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu-overlay');
+        const menuIcon = menuBtn.querySelector('i');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+        let isMenuOpen = false;
+
+        menuBtn.addEventListener('click', () => {
+            isMenuOpen = !isMenuOpen;
+            
+            if (isMenuOpen) {
+                mobileMenu.classList.remove('-translate-y-full');
+                menuIcon.setAttribute('data-lucide', 'x');
+                
+                // Staggered animation for links
+                mobileLinks.forEach(link => {
+                    link.classList.remove('opacity-0');
+                });
+            } else {
+                mobileMenu.classList.add('-translate-y-full');
+                menuIcon.setAttribute('data-lucide', 'menu');
+                
+                mobileLinks.forEach(link => {
+                    link.classList.add('opacity-0');
+                });
+            }
+            lucide.createIcons();
+        });
+
+        // Close menu when clicking a link
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                isMenuOpen = false;
+                mobileMenu.classList.add('-translate-y-full');
+                menuIcon.setAttribute('data-lucide', 'menu');
+                lucide.createIcons();
+            });
+        });
+
+        // 3. Scroll Reveal Animation
+        const revealElements = document.querySelectorAll('.reveal-on-scroll');
+        
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-active');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: "0px 0px -50px 0px"
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // 4. Accordion Logic
+        const accordions = document.querySelectorAll('.service-header');
+        
+        accordions.forEach(acc => {
+            acc.addEventListener('click', () => {
+                const content = acc.querySelector('.accordion-content');
+                const icon = acc.querySelector('.icon-chevron');
+                
+                // Toggle current
+                if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                    content.style.maxHeight = '0px';
+                    content.style.opacity = '0';
+                    content.style.marginTop = '0px';
+                    icon.classList.remove('rotate-180');
+                } else {
+                    // Close others (optional, but good for UX)
+                    accordions.forEach(otherAcc => {
+                        const otherContent = otherAcc.querySelector('.accordion-content');
+                        const otherIcon = otherAcc.querySelector('.icon-chevron');
+                        if (otherContent !== content) {
+                            otherContent.style.maxHeight = '0px';
+                            otherContent.style.opacity = '0';
+                            otherContent.style.marginTop = '0px';
+                            otherIcon.classList.remove('rotate-180');
+                        }
+                    });
+
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    content.style.opacity = '1';
+                    content.style.marginTop = '1.5rem'; // mt-6 equivalent
+                    icon.classList.add('rotate-180');
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
