@@ -1,0 +1,1102 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Menu, X, Phone, Calendar, ChevronRight, Award, Heart } from 'lucide-react';
+
+const LuxuryDentalClinic = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState('');
+  const observerRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (window.scrollY / totalHeight) * 100;
+      setScrollProgress(progress);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document.querySelectorAll('.reveal').forEach((el) => {
+      observerRef.current?.observe(el);
+    });
+
+    return () => observerRef.current?.disconnect();
+  }, []);
+
+  const services = [
+    {
+      number: '01',
+      title: '全口重建',
+      subtitle: 'Full Reconstruction',
+      description: '當牙齒不再只是工具,而是生活品質的延伸。我們以謹慎的工藝,為您重塑咀嚼的尊嚴與自信的笑容。',
+      details: '適合多顆缺牙或嚴重磨損者。療程依個人狀況約需 6-12 個月,過程中我們會密切追蹤您的適應狀況。'
+    },
+    {
+      number: '02',
+      title: '微創植牙',
+      subtitle: 'Minimally Invasive Implants',
+      description: '減少手術創傷,縮短恢復時間。採用國際頂級植體品牌,由經驗豐富的專科醫師親自執行每一個細節。',
+      details: '單顆植牙療程約 3-4 個月。我們重視植體與骨質的完美結合,而非追求速度。'
+    },
+    {
+      number: '03',
+      title: '齒顎美學',
+      subtitle: 'Dental Aesthetics',
+      description: '美,不是千篇一律的白。我們理解每個人的笑容都有其獨特的韻味,量身訂製最適合您的自然之美。',
+      details: '全瓷冠、陶瓷貼片等美學修復。療程 2-4 週,注重色澤與型態的和諧統一。'
+    },
+    {
+      number: '04',
+      title: '隱形矯正',
+      subtitle: 'Invisible Orthodontics',
+      description: '改變,可以是悄然無聲的。透過隱形矯正技術,在不影響日常生活的前提下,逐步調整至理想的咬合與排列。',
+      details: '療程 1.5-2.5 年,定期追蹤調整。我們在意的不只是整齊,更是咬合功能的長期健康。'
+    }
+  ];
+
+  const philosophy = [
+    {
+      icon: '🤲',
+      title: '工藝精神',
+      text: '每一個治療計畫都是量身訂製的作品,我們拒絕流水線式的標準化服務。'
+    },
+    {
+      icon: '🕰️',
+      title: '時間的尊重',
+      text: '充裕的診療時間,讓醫師能夠專注於您,而非趕著看下一位患者。'
+    },
+    {
+      icon: '🌿',
+      title: '空間的療癒',
+      text: '診所空間融入自然元素與藝術品,讓看牙成為一段平靜的時光。'
+    }
+  ];
+
+  return (
+    <div className="luxury-dental">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+        
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        :root {
+          --midnight: #1a2332;
+          --navy: #2d3e50;
+          --sage: #9ba5a0;
+          --warmgrey: #b8b5b0;
+          --oatmeal: #f5f3ee;
+          --cream: #fafafa;
+          --gold: #c9a961;
+          --darkgold: #a08749;
+        }
+        
+        body {
+          font-family: 'Noto Sans TC', -apple-system, sans-serif;
+          background: var(--cream);
+          color: var(--midnight);
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+          font-weight: 300;
+        }
+        
+        .serif {
+          font-family: 'Noto Serif TC', Georgia, serif;
+        }
+        
+        /* Smooth Animations */
+        .reveal {
+          opacity: 0;
+          transform: translateY(60px);
+          transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                      transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .reveal.in-view {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        .reveal-slow {
+          transition-duration: 1.6s;
+        }
+        
+        /* Typography */
+        h1, h2, h3 {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+        }
+        
+        p {
+          line-height: 1.8;
+          letter-spacing: 0.03em;
+          font-weight: 300;
+        }
+        
+        /* Navigation */
+        .nav-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
+          background: var(--cream);
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(26, 35, 50, 0.06);
+        }
+        
+        .nav-content {
+          max-width: 1600px;
+          margin: 0 auto;
+          padding: 2rem 4rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .logo {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 1.1rem;
+          font-weight: 500;
+          letter-spacing: 0.15em;
+          color: var(--midnight);
+        }
+        
+        .logo-subtitle {
+          font-size: 0.65rem;
+          letter-spacing: 0.2em;
+          color: var(--sage);
+          margin-top: 0.25rem;
+          font-weight: 300;
+        }
+        
+        .menu-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--midnight);
+          padding: 0.5rem;
+          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .menu-btn:hover {
+          transform: rotate(90deg);
+        }
+        
+        .menu-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100vh;
+          background: var(--midnight);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .menu-overlay.active {
+          opacity: 1;
+          pointer-events: all;
+        }
+        
+        .menu-items {
+          text-align: center;
+        }
+        
+        .menu-item {
+          display: block;
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 2.5rem;
+          color: var(--oatmeal);
+          text-decoration: none;
+          margin: 1.5rem 0;
+          opacity: 0.7;
+          transition: opacity 0.4s ease, letter-spacing 0.4s ease;
+          letter-spacing: 0.05em;
+        }
+        
+        .menu-item:hover {
+          opacity: 1;
+          letter-spacing: 0.15em;
+        }
+        
+        .close-btn {
+          position: absolute;
+          top: 2rem;
+          right: 4rem;
+          background: none;
+          border: none;
+          color: var(--oatmeal);
+          cursor: pointer;
+          padding: 0.5rem;
+          transition: transform 0.4s ease;
+        }
+        
+        .close-btn:hover {
+          transform: rotate(90deg);
+        }
+        
+        /* Hero Section */
+        .hero {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          padding: 8rem 4rem 4rem;
+          position: relative;
+          background: var(--cream);
+        }
+        
+        .hero-content {
+          max-width: 1600px;
+          margin: 0 auto;
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6rem;
+          align-items: center;
+        }
+        
+        .hero-text {
+          padding-right: 2rem;
+        }
+        
+        .hero-title {
+          font-size: clamp(2.5rem, 5vw, 4.5rem);
+          line-height: 1.2;
+          margin-bottom: 2rem;
+          color: var(--midnight);
+        }
+        
+        .hero-subtitle {
+          font-size: 1.1rem;
+          color: var(--sage);
+          margin-bottom: 3rem;
+          line-height: 1.8;
+          max-width: 500px;
+        }
+        
+        .hero-image {
+          position: relative;
+          height: 600px;
+          overflow: hidden;
+        }
+        
+        .hero-image-inner {
+          position: absolute;
+          top: -10%;
+          right: -10%;
+          width: 120%;
+          height: 120%;
+          background: linear-gradient(135deg, var(--navy) 0%, var(--midnight) 100%);
+          opacity: 0.9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 8rem;
+        }
+        
+        .cta-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1.2rem 2.5rem;
+          background: var(--midnight);
+          color: var(--oatmeal);
+          border: none;
+          font-family: 'Noto Sans TC', sans-serif;
+          font-size: 0.9rem;
+          letter-spacing: 0.1em;
+          cursor: pointer;
+          transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .cta-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: var(--gold);
+          transition: left 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          z-index: 0;
+        }
+        
+        .cta-button:hover::before {
+          left: 0;
+        }
+        
+        .cta-button span,
+        .cta-button svg {
+          position: relative;
+          z-index: 1;
+        }
+        
+        .cta-button:hover {
+          color: var(--midnight);
+        }
+        
+        /* Philosophy Section */
+        .philosophy-section {
+          padding: 10rem 4rem;
+          background: var(--midnight);
+          color: var(--oatmeal);
+        }
+        
+        .section-container {
+          max-width: 1600px;
+          margin: 0 auto;
+        }
+        
+        .section-header {
+          margin-bottom: 6rem;
+          max-width: 600px;
+        }
+        
+        .section-label {
+          font-size: 0.75rem;
+          letter-spacing: 0.2em;
+          color: var(--gold);
+          margin-bottom: 1rem;
+          text-transform: uppercase;
+        }
+        
+        .section-title {
+          font-size: clamp(2rem, 4vw, 3.5rem);
+          margin-bottom: 2rem;
+          line-height: 1.3;
+        }
+        
+        .section-description {
+          font-size: 1.05rem;
+          color: var(--warmgrey);
+          line-height: 1.8;
+        }
+        
+        .philosophy-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 4rem;
+        }
+        
+        .philosophy-item {
+          padding: 3rem 0;
+          border-top: 1px solid rgba(201, 169, 97, 0.2);
+        }
+        
+        .philosophy-icon {
+          font-size: 2.5rem;
+          margin-bottom: 1.5rem;
+          display: block;
+        }
+        
+        .philosophy-title {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 1.3rem;
+          margin-bottom: 1rem;
+          color: var(--gold);
+        }
+        
+        .philosophy-text {
+          color: var(--warmgrey);
+          font-size: 0.95rem;
+          line-height: 1.8;
+        }
+        
+        /* Services Section */
+        .services-section {
+          padding: 10rem 4rem;
+          background: var(--oatmeal);
+        }
+        
+        .service-item {
+          display: grid;
+          grid-template-columns: 1fr 1.2fr;
+          gap: 6rem;
+          margin-bottom: 10rem;
+          align-items: start;
+        }
+        
+        .service-item:nth-child(even) {
+          grid-template-columns: 1.2fr 1fr;
+        }
+        
+        .service-item:nth-child(even) .service-content {
+          order: 2;
+        }
+        
+        .service-item:nth-child(even) .service-visual {
+          order: 1;
+        }
+        
+        .service-number {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 5rem;
+          color: var(--gold);
+          opacity: 0.3;
+          margin-bottom: 1rem;
+          font-weight: 300;
+        }
+        
+        .service-title {
+          font-size: 2.5rem;
+          margin-bottom: 0.5rem;
+          line-height: 1.2;
+        }
+        
+        .service-subtitle {
+          font-size: 0.85rem;
+          color: var(--sage);
+          letter-spacing: 0.15em;
+          margin-bottom: 2rem;
+          text-transform: uppercase;
+        }
+        
+        .service-description {
+          font-size: 1.05rem;
+          margin-bottom: 2rem;
+          color: var(--navy);
+          line-height: 1.8;
+        }
+        
+        .service-details {
+          font-size: 0.9rem;
+          color: var(--sage);
+          line-height: 1.7;
+          padding-left: 1.5rem;
+          border-left: 2px solid var(--gold);
+        }
+        
+        .service-visual {
+          position: relative;
+          height: 500px;
+          background: linear-gradient(135deg, var(--navy) 0%, var(--sage) 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 6rem;
+          color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .service-visual::after {
+          content: '';
+          position: absolute;
+          top: 5%;
+          left: 5%;
+          right: 5%;
+          bottom: 5%;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Team Section */
+        .team-section {
+          padding: 10rem 4rem;
+          background: var(--cream);
+        }
+        
+        .team-intro {
+          max-width: 800px;
+          margin: 0 auto 8rem;
+          text-align: center;
+        }
+        
+        .doctor-card {
+          display: grid;
+          grid-template-columns: 1fr 1.5fr;
+          gap: 4rem;
+          margin-bottom: 6rem;
+          background: white;
+          padding: 4rem;
+          position: relative;
+        }
+        
+        .doctor-image {
+          aspect-ratio: 3/4;
+          background: linear-gradient(135deg, var(--sage) 0%, var(--warmgrey) 100%);
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 6rem;
+        }
+        
+        .doctor-info {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding-left: 2rem;
+        }
+        
+        .doctor-name {
+          font-size: 2rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        .doctor-title {
+          font-size: 0.9rem;
+          color: var(--gold);
+          margin-bottom: 2rem;
+          letter-spacing: 0.1em;
+        }
+        
+        .doctor-quote {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 1.1rem;
+          line-height: 1.8;
+          color: var(--navy);
+          margin-bottom: 2rem;
+          font-style: italic;
+          padding-left: 2rem;
+          border-left: 3px solid var(--gold);
+        }
+        
+        .doctor-credentials {
+          font-size: 0.9rem;
+          color: var(--sage);
+          line-height: 1.7;
+        }
+        
+        /* Contact Section */
+        .contact-section {
+          padding: 10rem 4rem;
+          background: var(--navy);
+          color: var(--oatmeal);
+        }
+        
+        .contact-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+        
+        .contact-info {
+          display: flex;
+          flex-direction: column;
+          gap: 3rem;
+        }
+        
+        .contact-item {
+          padding-bottom: 2rem;
+          border-bottom: 1px solid rgba(201, 169, 97, 0.2);
+        }
+        
+        .contact-label {
+          font-size: 0.75rem;
+          letter-spacing: 0.2em;
+          color: var(--gold);
+          margin-bottom: 0.75rem;
+          text-transform: uppercase;
+        }
+        
+        .contact-value {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 1.3rem;
+          color: var(--oatmeal);
+        }
+        
+        .contact-value a {
+          color: var(--oatmeal);
+          text-decoration: none;
+          transition: color 0.4s ease;
+        }
+        
+        .contact-value a:hover {
+          color: var(--gold);
+        }
+        
+        .contact-form {
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+        }
+        
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        
+        .form-label {
+          font-size: 0.8rem;
+          letter-spacing: 0.1em;
+          color: var(--warmgrey);
+        }
+        
+        .form-input,
+        .form-textarea {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(201, 169, 97, 0.2);
+          padding: 1rem 1.5rem;
+          color: var(--oatmeal);
+          font-family: 'Noto Sans TC', sans-serif;
+          font-size: 0.95rem;
+          transition: border-color 0.4s ease;
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus {
+          outline: none;
+          border-color: var(--gold);
+        }
+        
+        .form-textarea {
+          resize: vertical;
+          min-height: 150px;
+        }
+        
+        .form-submit {
+          align-self: flex-start;
+          padding: 1.2rem 3rem;
+          background: var(--gold);
+          color: var(--midnight);
+          border: none;
+          font-family: 'Noto Sans TC', sans-serif;
+          font-size: 0.9rem;
+          letter-spacing: 0.1em;
+          cursor: pointer;
+          transition: background 0.4s ease;
+        }
+        
+        .form-submit:hover {
+          background: var(--darkgold);
+        }
+        
+        /* Footer */
+        .footer {
+          padding: 4rem 4rem 2rem;
+          background: var(--midnight);
+          color: var(--warmgrey);
+          text-align: center;
+        }
+        
+        .footer-content {
+          max-width: 1600px;
+          margin: 0 auto;
+        }
+        
+        .footer-logo {
+          font-family: 'Noto Serif TC', Georgia, serif;
+          font-size: 1rem;
+          letter-spacing: 0.15em;
+          margin-bottom: 2rem;
+          color: var(--oatmeal);
+        }
+        
+        .footer-text {
+          font-size: 0.8rem;
+          line-height: 1.8;
+          margin-bottom: 1rem;
+        }
+        
+        .footer-legal {
+          font-size: 0.7rem;
+          color: var(--sage);
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid rgba(201, 169, 97, 0.1);
+        }
+        
+        /* Floating Action Button */
+        .fab {
+          position: fixed;
+          bottom: 3rem;
+          right: 3rem;
+          width: 60px;
+          height: 60px;
+          background: var(--gold);
+          color: var(--midnight);
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                      box-shadow 0.4s ease;
+          z-index: 999;
+        }
+        
+        .fab:hover {
+          transform: scale(1.1);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .nav-content {
+            padding: 1.5rem 2rem;
+          }
+          
+          .hero-content {
+            grid-template-columns: 1fr;
+            gap: 3rem;
+          }
+          
+          .hero-image {
+            height: 400px;
+          }
+          
+          .philosophy-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+          
+          .service-item,
+          .service-item:nth-child(even) {
+            grid-template-columns: 1fr;
+          }
+          
+          .service-item:nth-child(even) .service-content,
+          .service-item:nth-child(even) .service-visual {
+            order: initial;
+          }
+          
+          .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 4rem;
+          }
+          
+          .doctor-card {
+            grid-template-columns: 1fr;
+            padding: 2rem;
+          }
+          
+          .close-btn {
+            right: 2rem;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .hero,
+          .philosophy-section,
+          .services-section,
+          .team-section,
+          .contact-section {
+            padding: 6rem 1.5rem;
+          }
+          
+          .section-title {
+            font-size: 2rem;
+          }
+          
+          .service-number {
+            font-size: 3rem;
+          }
+          
+          .service-title {
+            font-size: 1.8rem;
+          }
+          
+          .fab {
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 50px;
+            height: 50px;
+          }
+        }
+      `}</style>
+
+      {/* Navigation */}
+      <nav className="nav-container">
+        <div className="nav-content">
+          <div className="logo">
+            <div>齒 間 藝 術</div>
+            <div className="logo-subtitle">DENTAL ATELIER</div>
+          </div>
+          <button className="menu-btn" onClick={() => setMenuOpen(true)}>
+            <Menu size={28} strokeWidth={1.5} />
+          </button>
+        </div>
+      </nav>
+
+      {/* Menu Overlay */}
+      <div className={`menu-overlay ${menuOpen ? 'active' : ''}`}>
+        <button className="close-btn" onClick={() => setMenuOpen(false)}>
+          <X size={32} strokeWidth={1.5} />
+        </button>
+        <div className="menu-items">
+          <a href="#philosophy" className="menu-item" onClick={() => setMenuOpen(false)}>
+            診所理念
+          </a>
+          <a href="#services" className="menu-item" onClick={() => setMenuOpen(false)}>
+            診療項目
+          </a>
+          <a href="#team" className="menu-item" onClick={() => setMenuOpen(false)}>
+            醫療團隊
+          </a>
+          <a href="#contact" className="menu-item" onClick={() => setMenuOpen(false)}>
+            預約諮詢
+          </a>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="hero-content">
+          <div className="hero-text reveal">
+            <h1 className="hero-title serif">
+              在齒間
+              <br />
+              尋找生活的
+              <br />
+              從容與優雅
+            </h1>
+            <p className="hero-subtitle">
+              這裡不是傳統診所的延伸,而是一個讓您感到平靜與被尊重的空間。
+              我們相信,口腔健康不僅關乎功能,更是生活品質的基石。
+            </p>
+            <button className="cta-button">
+              <span>預約私人諮詢</span>
+              <ChevronRight size={20} strokeWidth={1.5} />
+            </button>
+          </div>
+          <div className="hero-image reveal reveal-slow">
+            <div className="hero-image-inner">
+              🦷
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Philosophy Section */}
+      <section id="philosophy" className="philosophy-section">
+        <div className="section-container">
+          <div className="section-header reveal">
+            <div className="section-label">Our Philosophy</div>
+            <h2 className="section-title serif">
+              醫療,是一門關於時間與信任的藝術
+            </h2>
+            <p className="section-description">
+              我們拒絕將患者視為流水線上的數字。每一次診療,都是一段需要被細細品味的旅程。
+              在這裡,您會感受到醫療應有的溫度、專注與尊重。
+            </p>
+          </div>
+          <div className="philosophy-grid">
+            {philosophy.map((item, index) => (
+              <div key={index} className="philosophy-item reveal" style={{transitionDelay: `${index * 0.2}s`}}>
+                <span className="philosophy-icon">{item.icon}</span>
+                <h3 className="philosophy-title">{item.title}</h3>
+                <p className="philosophy-text">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section id="services" className="services-section">
+        <div className="section-container">
+          <div className="section-header reveal">
+            <div className="section-label">Services</div>
+            <h2 className="section-title serif">
+              量身訂製的治療計畫
+            </h2>
+          </div>
+          {services.map((service, index) => (
+            <div key={index} className="service-item reveal" style={{transitionDelay: `${index * 0.15}s`}}>
+              <div className="service-content">
+                <div className="service-number">{service.number}</div>
+                <h3 className="service-title serif">{service.title}</h3>
+                <div className="service-subtitle">{service.subtitle}</div>
+                <p className="service-description">{service.description}</p>
+                <div className="service-details">{service.details}</div>
+              </div>
+              <div className="service-visual">
+                {service.number}
+              </div>
+            </div>
+          ))}
+          <div className="reveal" style={{marginTop: '6rem', maxWidth: '800px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center'}}>
+            <p style={{fontSize: '0.85rem', lineHeight: '1.8', color: 'var(--sage)'}}>
+              以上療程說明僅供參考。每位患者的口腔狀況皆不相同,實際治療方案需由醫師親自評估後決定。
+              我們重視溝通的過程,會在治療前詳細說明可能的風險、替代方案與預期效果。
+              本診所不對療效做任何保證,但承諾以最謹慎的態度守護您的健康。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section id="team" className="team-section">
+        <div className="section-container">
+          <div className="team-intro reveal">
+            <div className="section-label">Our Team</div>
+            <h2 className="section-title serif">
+              經驗與溫度兼具的醫療團隊
+            </h2>
+            <p className="section-description" style={{color: 'var(--navy)'}}>
+              我們的醫師不只擁有專業證照與豐富經驗,更重視與患者之間的信任關係。
+              在這裡,您不會只是一個病歷號碼。
+            </p>
+          </div>
+
+          <div className="doctor-card reveal">
+            <div className="doctor-image">
+              👨‍⚕️
+            </div>
+            <div className="doctor-info">
+              <h3 className="doctor-name serif">陳品睿 醫師</h3>
+              <div className="doctor-title">院長 / 植牙暨全口重建專科</div>
+              <p className="doctor-quote">
+                「每一顆牙齒的重建,都不只是技術的堆疊,而是對患者生活品質的承諾。
+                我希望來到這裡的每個人,都能在療程結束後,重新找回咀嚼的自在與笑容的自信。」
+              </p>
+              <div className="doctor-credentials">
+                台大牙醫學系學士 / 中華民國植牙醫學會專科醫師 / 
+                國際口腔植體學會(ICOI)院士 / 國際植牙專科醫師學會(ICOI)認證醫師
+              </div>
+            </div>
+          </div>
+
+          <div className="doctor-card reveal">
+            <div className="doctor-image">
+              👩‍⚕️
+            </div>
+            <div className="doctor-info">
+              <h3 className="doctor-name serif">林雅婷 醫師</h3>
+              <div className="doctor-title">主治醫師 / 齒顎矯正專科</div>
+              <p className="doctor-quote">
+                「矯正不該只是追求整齊,更要在意咬合功能與臉型的和諧。
+                我相信,美是自然而然的,而非刻意雕琢的結果。」
+              </p>
+              <div className="doctor-credentials">
+                陽明交大牙醫學系學士 / 中華民國齒顎矯正學會專科醫師 / 
+                隱適美(Invisalign)白金級認證醫師 / 美國矯正學會(AAO)會員
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="contact-section">
+        <div className="section-container">
+          <div className="section-header reveal" style={{textAlign: 'center', maxWidth: 'none', marginBottom: '6rem'}}>
+            <div className="section-label">Contact</div>
+            <h2 className="section-title serif">
+              我們期待與您相遇
+            </h2>
+          </div>
+          <div className="contact-grid">
+            <div className="contact-info reveal">
+              <div className="contact-item">
+                <div className="contact-label">Address</div>
+                <div className="contact-value">
+                  宜蘭市中山路二段 123 號
+                  <br />
+                  <span style={{fontSize: '0.9rem', color: 'var(--warmgrey)'}}>
+                    (近黎明國小,備有專屬停車位)
+                  </span>
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-label">Phone</div>
+                <div className="contact-value">
+                  <a href="tel:03-1234567">(03) 123-4567</a>
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-label">Hours</div>
+                <div className="contact-value" style={{fontSize: '1rem', lineHeight: '1.8'}}>
+                  週一至週五 10:00 - 18:00
+                  <br />
+                  週六 10:00 - 14:00
+                  <br />
+                  週日及國定假日休診
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-label">Notice</div>
+                <p style={{fontSize: '0.85rem', lineHeight: '1.7', color: 'var(--warmgrey)'}}>
+                  為確保診療品質,本診所採預約制。
+                  初診患者建議提前 3-5 個工作日預約,
+                  以便我們為您安排充裕的諮詢時間。
+                </p>
+              </div>
+            </div>
+
+            <form className="contact-form reveal">
+              <div className="form-group">
+                <label className="form-label">您的姓名</label>
+                <input type="text" className="form-input" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">聯絡電話</label>
+                <input type="tel" className="form-input" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">電子信箱</label>
+                <input type="email" className="form-input" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">預約項目</label>
+                <input type="text" className="form-input" placeholder="例：植牙諮詢、矯正評估" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">希望告訴我們的事</label>
+                <textarea className="form-textarea" placeholder="您的需求、疑慮或特殊狀況"></textarea>
+              </div>
+              <button type="submit" className="form-submit">
+                送出預約申請
+              </button>
+              <p style={{fontSize: '0.75rem', color: 'var(--sage)', lineHeight: '1.6', marginTop: '1rem'}}>
+                送出後,我們會在 24 小時內與您聯繫確認。
+                若有急迫需求,歡迎直接來電。
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-logo">齒間藝術 / DENTAL ATELIER</div>
+          <p className="footer-text">
+            以工藝精神守護每一位患者的口腔健康
+          </p>
+          <div className="footer-legal">
+            © 2025 齒間藝術牙醫診所 Dental Atelier. All rights reserved.
+            <br />
+            本網站內容僅供參考,不作為診斷或治療之依據。實際診療需由專業醫師評估。
+          </div>
+        </div>
+      </footer>
+
+      {/* Floating Action Button */}
+      <button className="fab" aria-label="預約諮詢">
+        <Calendar size={24} strokeWidth={1.5} />
+      </button>
+    </div>
+  );
+};
+
+export default LuxuryDentalClinic;
